@@ -14,6 +14,8 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev)
 
+<img src="public/FlowBooks.png" alt="FlowBooks Screenshot" width="100%" />
+
 </div>
 
 ---
