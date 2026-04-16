@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- Green rounded background -->
+  <rect width="32" height="32" rx="7" fill="#3d6b52"/>
+  <!-- Letter F as pure paths (no font dependency) -->
+  <!-- Vertical stem -->
+  <rect x="9" y="8" width="3" height="16" rx="1" fill="#f0ebe0"/>
+  <!-- Top horizontal bar -->
+  <rect x="9" y="8" width="12" height="3" rx="1" fill="#f0ebe0"/>
+  <!-- Middle horizontal bar -->
+  <rect x="9" y="14.5" width="9" height="2.5" rx="1" fill="#f0ebe0"/>
+  <!-- Flow wave accent -->
+  <path d="M8 27 Q12 25 16 27 Q20 29 24 26" stroke="#7ab89a" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+</svg>
