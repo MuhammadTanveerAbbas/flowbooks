@@ -29,13 +29,18 @@ function OAuthCallbackHandler() {
   const location = useLocation();
 
   useEffect(() => {
-    if (location.hash && location.hash.includes('access_token')) {
-      const cleanPath = location.pathname;
-      window.history.replaceState({}, document.title, cleanPath);
-      if (cleanPath === '/dashboard' || cleanPath === '/') {
+    const handleOAuthCallback = async () => {
+      if (location.hash && location.hash.includes('access_token')) {
+        // Clean URL immediately to hide tokens
+        const cleanPath = location.pathname;
+        window.history.replaceState({}, document.title, cleanPath);
+        
+        // Navigate to dashboard after cleaning
         navigate('/dashboard', { replace: true });
       }
-    }
+    };
+
+    handleOAuthCallback();
   }, [location, navigate]);
 
   return null;
