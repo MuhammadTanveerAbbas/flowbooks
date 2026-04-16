@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -20,8 +20,26 @@ import ProjectsPage from "@/pages/ProjectsPage";
 import TaxPage from "@/pages/TaxPage";
 import InvoicesPage from "@/pages/InvoicesPage";
 import SettingsPage from "@/pages/SettingsPage";
+import { useEffect } from "react";
 
 const queryClient = new QueryClient();
+
+function OAuthCallbackHandler() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.hash && location.hash.includes('access_token')) {
+      const cleanPath = location.pathname;
+      window.history.replaceState({}, document.title, cleanPath);
+      if (cleanPath === '/dashboard' || cleanPath === '/') {
+        navigate('/dashboard', { replace: true });
+      }
+    }
+  }, [location, navigate]);
+
+  return null;
+}
 
 const App = () => (
   <ErrorBoundary>
@@ -33,6 +51,7 @@ const App = () => (
           future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
         >
           <AuthProvider>
+            <OAuthCallbackHandler />
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<Login />} />
