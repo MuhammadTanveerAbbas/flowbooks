@@ -57,7 +57,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSession(session);
+      console.log('[Auth] State change:', _event, session?.user?.email);
+      setSession(session ?? null);
       if (session?.user) {
         await fetchProfile(session.user.id);
       } else {
@@ -66,13 +67,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
+    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
+      console.log('[Auth] Initial session:', session?.user?.email, error);
+      if (error) {
+        console.error('[Auth] Session fetch error:', error);
+      }
+      setSession(session ?? null);
       if (session?.user) {
         await fetchProfile(session.user.id);
       } else {
         setOnboardingComplete(null);
       }
+      setLoading(false);
+    }).catch((err) => {
+      console.error('[Auth] Session error:', err);
+      setSession(null);
+      setOnboardingComplete(null);
       setLoading(false);
     });
 
