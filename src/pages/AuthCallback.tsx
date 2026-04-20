@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -6,40 +6,62 @@ import { toast } from "sonner";
 export default function AuthCallback() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const handleCallback = async () => {
-      const params = new URLSearchParams(location.search);
-      const code = params.get("code");
+      try {
+        const params = new URLSearchParams(location.search);
+        const code = params.get("code");
+        const errorParam = params.get("error");
+        const errorDescription = params.get("error_description");
 
-      if (!code) {
-        // No code — just check if there's already a session
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (session) {
-          await redirectAfterAuth(session.user.id);
-        } else {
-          toast.error("Authentication failed. Please try again.");
-          navigate("/login", { replace: true });
+        if (errorParam) {
+          setError(errorDescription || errorParam);
+          toast.error(errorDescription || "Authentication failed");
+          setTimeout(() => navigate("/login", { replace: true }), 2000);
+          return;
         }
-        return;
-      }
 
-      // Exchange the PKCE code for a session
-      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+        if (!code) {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            await redirectAfterAuth(session.user.id);
+          } else {
+            setError("No authentication code received");
+            toast.error("Authentication failed. Please try again.");
+            setTimeout(() => navigate("/login", { replace: true }), 2000);
+          }
+          return;
+        }
 
-      if (error || !data.session) {
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+        if (error) {
+          setError(error.message);
+          toast.error(error.message || "Authentication failed");
+          setTimeout(() => navigate("/login", { replace: true }), 2000);
+          return;
+        }
+
+        if (!data.session) {
+          setError("No session created");
+          toast.error("Authentication failed. Please try again.");
+          setTimeout(() => navigate("/login", { replace: true }), 2000);
+          return;
+        }
+
+        await redirectAfterAuth(data.session.user.id);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Unknown error";
+        setError(message);
         toast.error("Authentication failed. Please try again.");
-        navigate("/login", { replace: true });
-        return;
+        setTimeout(() => navigate("/login", { replace: true }), 2000);
       }
-
-      await redirectAfterAuth(data.session.user.id);
     };
 
     handleCallback();
-  }, []);
+  }, [location, navigate]);
 
   const redirectAfterAuth = async (userId: string) => {
     const { data } = await supabase
@@ -56,8 +78,19 @@ export default function AuthCallback() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
+      {error ? (
+        <div className="text-center space-y-2">
+          <p className="text-destructive font-medium">Authentication Error</p>
+          <p className="text-sm text-muted-foreground">{error}</p>
+          <p className="text-xs text-muted-foreground">Redirecting to login...</p>
+        </div>
+      ) : (
+        <>
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-muted-foreground">Completing sign in...</p>
+        </>
+      )}
     </div>
   );
 }

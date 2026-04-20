@@ -36,13 +36,18 @@ export default function Signup() {
   };
 
   const handleGoogleSignup = async () => {
+    setLoading(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
+        skipBrowserRedirect: false,
       },
     });
-    if (error) toast.error("Google sign-up failed");
+    if (error) {
+      toast.error(error.message || "Google sign-up failed");
+      setLoading(false);
+    }
   };
 
   return (
