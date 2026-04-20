@@ -7,72 +7,74 @@ export default function AuthCallback() {
   const navigate = useNavigate();
   const location = useLocation();
   const [error, setError] = useState<string | null>(null);
+  const [processing, setProcessing] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
     const handleCallback = async () => {
       try {
         const params = new URLSearchParams(location.search);
-        const code = params.get("code");
         const errorParam = params.get("error");
         const errorDescription = params.get("error_description");
 
         if (errorParam) {
-          setError(errorDescription || errorParam);
-          toast.error(errorDescription || "Authentication failed");
-          setTimeout(() => navigate("/login", { replace: true }), 2000);
-          return;
-        }
-
-        if (!code) {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session) {
-            await redirectAfterAuth(session.user.id);
-          } else {
-            setError("No authentication code received");
-            toast.error("Authentication failed. Please try again.");
-            setTimeout(() => navigate("/login", { replace: true }), 2000);
+          if (mounted) {
+            setError(errorDescription || errorParam);
+            toast.error(errorDescription || "Authentication failed");
           }
+          setTimeout(() => mounted && navigate("/login", { replace: true }), 2000);
           return;
         }
 
-        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+        // Wait a bit for Supabase to process the session
+        await new Promise(resolve => setTimeout(resolve, 500));
 
-        if (error) {
-          setError(error.message);
-          toast.error(error.message || "Authentication failed");
-          setTimeout(() => navigate("/login", { replace: true }), 2000);
-          return;
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+        if (sessionError) {
+          throw sessionError;
         }
 
-        if (!data.session) {
-          setError("No session created");
-          toast.error("Authentication failed. Please try again.");
-          setTimeout(() => navigate("/login", { replace: true }), 2000);
-          return;
+        if (!session) {
+          throw new Error("No session created");
         }
 
-        await redirectAfterAuth(data.session.user.id);
+        if (mounted) {
+          await redirectAfterAuth(session.user.id);
+        }
       } catch (err) {
         const message = err instanceof Error ? err.message : "Unknown error";
-        setError(message);
-        toast.error("Authentication failed. Please try again.");
-        setTimeout(() => navigate("/login", { replace: true }), 2000);
+        if (mounted) {
+          setError(message);
+          setProcessing(false);
+          toast.error("Authentication failed. Please try again.");
+          setTimeout(() => mounted && navigate("/login", { replace: true }), 2000);
+        }
       }
     };
 
     handleCallback();
+
+    return () => {
+      mounted = false;
+    };
   }, [location, navigate]);
 
   const redirectAfterAuth = async (userId: string) => {
-    const { data } = await supabase
-      .from("profiles")
-      .select("onboarding_complete")
-      .eq("id", userId)
-      .maybeSingle();
+    try {
+      const { data } = await supabase
+        .from("profiles")
+        .select("onboarding_complete")
+        .eq("id", userId)
+        .maybeSingle();
 
-    if (data?.onboarding_complete) {
-      navigate("/dashboard", { replace: true });
-    } else {
+      if (data?.onboarding_complete) {
+        navigate("/dashboard", { replace: true });
+      } else {
+        navigate("/onboarding", { replace: true });
+      }
+    } catch (err) {
       navigate("/onboarding", { replace: true });
     }
   };
@@ -85,12 +87,12 @@ export default function AuthCallback() {
           <p className="text-sm text-muted-foreground">{error}</p>
           <p className="text-xs text-muted-foreground">Redirecting to login...</p>
         </div>
-      ) : (
+      ) : processing ? (
         <>
           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           <p className="text-sm text-muted-foreground">Completing sign in...</p>
         </>
-      )}
+      ) : null}
     </div>
   );
 }
