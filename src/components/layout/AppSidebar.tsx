@@ -8,7 +8,6 @@ import {
   Calculator,
   FileText,
   Settings,
-  LogOut,
   ChevronLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -34,7 +33,7 @@ export function AppSidebar() {
     <aside
       className={cn(
         "hidden md:flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out",
-        collapsed ? "w-[68px]" : "w-[220px]"
+        collapsed ? "w-[68px]" : "w-[220px]",
       )}
     >
       {/* Logo area */}
@@ -50,7 +49,8 @@ export function AppSidebar() {
       {/* Nav */}
       <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
         {navItems.map(({ to, label, icon: Icon }) => {
-          const isActive = location.pathname === to || location.pathname.startsWith(to + "/");
+          const isActive =
+            location.pathname === to || location.pathname.startsWith(to + "/");
           return (
             <NavLink
               key={to}
@@ -59,7 +59,7 @@ export function AppSidebar() {
                 "flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm font-medium transition-colors",
                 isActive
                   ? "bg-sidebar-accent text-sidebar-primary"
-                  : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                  : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50",
               )}
             >
               <Icon className="w-[18px] h-[18px] shrink-0" strokeWidth={1.8} />
@@ -76,7 +76,10 @@ export function AppSidebar() {
           className="flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors w-full"
         >
           <ChevronLeft
-            className={cn("w-[18px] h-[18px] shrink-0 transition-transform", collapsed && "rotate-180")}
+            className={cn(
+              "w-[18px] h-[18px] shrink-0 transition-transform",
+              collapsed && "rotate-180",
+            )}
             strokeWidth={1.8}
           />
           {!collapsed && <span>Collapse</span>}

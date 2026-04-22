@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { PageLoader } from "@/components/PageLoader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -79,7 +80,10 @@ export default function ExpensesPage() {
   });
 
   const fetchData = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     const { data } = await supabase
       .from("expenses")
       .select("*")
@@ -306,13 +310,12 @@ export default function ExpensesPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardContent className="p-0">
-          {loading ? (
-            <div className="p-8 text-center text-muted-foreground text-sm">
-              Loading…
-            </div>
-          ) : entries.length === 0 ? (
+      {loading ? (
+        <PageLoader />
+      ) : (
+        <Card>
+          <CardContent className="p-0">
+            {entries.length === 0 ? (
             <div className="p-12 text-center text-muted-foreground text-sm">
               No expenses yet. Add your first one above.
             </div>
@@ -366,9 +369,10 @@ export default function ExpensesPage() {
                 ))}
               </TableBody>
             </Table>
-          )}
-        </CardContent>
-      </Card>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <AlertDialog
         open={!!deleteId}

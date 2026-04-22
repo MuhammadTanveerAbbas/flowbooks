@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { PageLoader } from "@/components/PageLoader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,7 +52,10 @@ export default function ClientsPage() {
   });
 
   const fetchData = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     const { data } = await supabase
       .from("clients")
       .select("*")
@@ -229,9 +233,7 @@ export default function ClientsPage() {
       </div>
 
       {loading ? (
-        <div className="p-8 text-center text-muted-foreground text-sm">
-          Loading…
-        </div>
+        <PageLoader />
       ) : clients.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center text-muted-foreground text-sm">

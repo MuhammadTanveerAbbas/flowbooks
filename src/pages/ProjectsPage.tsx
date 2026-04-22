@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { PageLoader } from "@/components/PageLoader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -64,7 +65,10 @@ export default function ProjectsPage() {
   });
 
   const fetchData = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     const [pRes, cRes] = await Promise.all([
       supabase
         .from("projects")
@@ -144,7 +148,10 @@ export default function ProjectsPage() {
       name: project.name,
       description: project.description || "",
       status: project.status,
-      budget: project.budget > 0 ? String(project.budget) : "",
+      budget:
+        project.budget != null && project.budget > 0
+          ? String(project.budget)
+          : "",
       client_id: project.client_id || "",
     });
     setOpen(true);
@@ -291,9 +298,7 @@ export default function ProjectsPage() {
       </div>
 
       {loading ? (
-        <div className="p-8 text-center text-muted-foreground text-sm">
-          Loading…
-        </div>
+        <PageLoader />
       ) : projects.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center text-muted-foreground text-sm">
@@ -340,7 +345,7 @@ export default function ProjectsPage() {
                     Client: {p.clients.name}
                   </p>
                 )}
-                {p.budget > 0 && (
+                {p.budget != null && p.budget > 0 && (
                   <p className="text-xs text-muted-foreground">
                     Budget: ${Number(p.budget).toLocaleString()}
                   </p>

@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+﻿import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import {
@@ -302,73 +302,384 @@ export default function LandingPage() {
       </header>
 
       {/* Hero */}
-      <section className="max-w-6xl mx-auto px-6 pt-20 pb-24 md:pt-32 md:pb-32">
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          className="max-w-2xl mx-auto text-center"
-        >
-          <motion.div
-            variants={fadeUp}
-            custom={0}
-            className="inline-block mb-4 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium"
+      <section className="relative overflow-hidden bg-gradient-to-b from-[#f0faf4] via-background to-background dark:from-[#0a1a0f] dark:via-background">
+        {/* Decorative background blobs */}
+        <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+          <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[900px] h-[600px] bg-gradient-to-br from-primary/20 via-emerald-400/10 to-transparent rounded-full blur-3xl" />
+          <div className="absolute top-40 -left-32 w-72 h-72 bg-purple-400/10 rounded-full blur-3xl" />
+          <div className="absolute top-20 -right-20 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
+          {/* Grid pattern */}
+          <svg
+            className="absolute inset-0 w-full h-full opacity-[0.03]"
+            xmlns="http://www.w3.org/2000/svg"
           >
-            Built for freelancers, not corporations
-          </motion.div>
-          <motion.h1
-            variants={fadeUp}
-            custom={1}
-            className="font-serif text-4xl md:text-6xl font-bold tracking-tight leading-[1.1]"
-          >
-            Freelance finances,
-            <br />
-            <span className="text-primary">made simpler</span>
-          </motion.h1>
-          <motion.p
-            variants={fadeUp}
-            custom={2}
-            className="mt-5 text-lg text-muted-foreground max-w-lg mx-auto"
-          >
-            Track irregular income, estimate taxes, send invoices, and actually
-            understand where your money goes all in one calm, focused tool.
-          </motion.p>
-          <motion.div
-            variants={fadeUp}
-            custom={3}
-            className="mt-8 flex flex-col sm:flex-row gap-3 justify-center"
-          >
-            {!loading && user ? (
-              <Button size="lg" onClick={() => navigate("/dashboard")}>
-                Go to Dashboard <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
-            ) : (
-              <>
-                <Button size="lg" onClick={() => navigate("/signup")}>
-                  Start for free <ArrowRight className="w-4 h-4 ml-1" />
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  onClick={() => navigate("/login")}
-                >
-                  Sign in
-                </Button>
-              </>
-            )}
-          </motion.div>
-        </motion.div>
+            <defs>
+              <pattern
+                id="grid"
+                width="40"
+                height="40"
+                patternUnits="userSpaceOnUse"
+              >
+                <path
+                  d="M 40 0 L 0 0 0 40"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1"
+                />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid)" />
+          </svg>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-6 pt-20 pb-28 md:pt-28 md:pb-36">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            {/* Left: Text content */}
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              className="text-center lg:text-left space-y-8"
+            >
+              {/* Badge */}
+              <motion.div variants={fadeUp} custom={0}>
+                <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium border border-primary/30 bg-primary/5 text-primary shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                  Built for freelancers, not corporations
+                </span>
+              </motion.div>
+
+              {/* Headline */}
+              <motion.h1
+                variants={fadeUp}
+                custom={1}
+                className="font-serif text-5xl md:text-6xl lg:text-[4.5rem] font-bold tracking-tight leading-[1.08]"
+              >
+                Freelance finances,
+                <span className="block mt-1">
+                  <span className="relative inline-block bg-gradient-to-r from-primary via-emerald-400 to-teal-500 bg-clip-text text-transparent">
+                    made simpler.
+                    {/* Wavy underline â€” inline so it matches text width */}
+                    <motion.svg
+                      initial={{ pathLength: 0, opacity: 0 }}
+                      animate={{ pathLength: 1, opacity: 1 }}
+                      transition={{
+                        delay: 0.7,
+                        duration: 0.9,
+                        ease: "easeOut",
+                      }}
+                      viewBox="0 0 200 10"
+                      preserveAspectRatio="none"
+                      className="absolute -bottom-1.5 left-0 w-full h-2.5 overflow-visible"
+                      aria-hidden="true"
+                    >
+                      <motion.path
+                        d="M0,5 C25,1 50,9 75,5 C100,1 125,9 150,5 C170,2 185,6 200,5"
+                        fill="none"
+                        stroke="url(#waveGrad)"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: 1 }}
+                        transition={{
+                          delay: 0.7,
+                          duration: 0.9,
+                          ease: "easeOut",
+                        }}
+                      />
+                      <defs>
+                        <linearGradient
+                          id="waveGrad"
+                          x1="0%"
+                          y1="0%"
+                          x2="100%"
+                          y2="0%"
+                        >
+                          <stop
+                            offset="0%"
+                            stopColor="hsl(var(--primary))"
+                            stopOpacity="0.8"
+                          />
+                          <stop
+                            offset="100%"
+                            stopColor="#2dd4bf"
+                            stopOpacity="0.8"
+                          />
+                        </linearGradient>
+                      </defs>
+                    </motion.svg>
+                  </span>
+                </span>
+              </motion.h1>
+
+              {/* Subtext */}
+              <motion.p
+                variants={fadeUp}
+                custom={2}
+                className="text-lg md:text-xl text-muted-foreground max-w-lg mx-auto lg:mx-0 leading-relaxed"
+              >
+                Track irregular income, estimate taxes, send invoices, and
+                actually understand where your money goes all in one calm,
+                focused tool.
+              </motion.p>
+
+              {/* CTAs */}
+              <motion.div
+                variants={fadeUp}
+                custom={3}
+                className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start"
+              >
+                {!loading && user ? (
+                  <Button
+                    size="lg"
+                    className="h-13 px-8 text-base rounded-xl shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-200"
+                    onClick={() => navigate("/dashboard")}
+                  >
+                    Go to Dashboard <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      size="lg"
+                      className="h-13 px-8 text-base rounded-xl shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-200"
+                      onClick={() => navigate("/signup")}
+                    >
+                      Start for free <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="h-13 px-8 text-base rounded-xl border-2 hover:bg-muted hover:-translate-y-0.5 transition-all duration-200"
+                      onClick={() => navigate("/login")}
+                    >
+                      Sign in
+                    </Button>
+                  </>
+                )}
+              </motion.div>
+
+              {/* Trust badges */}
+              <motion.div
+                variants={fadeUp}
+                custom={4}
+                className="flex flex-wrap items-center justify-center lg:justify-start gap-5 pt-1"
+              >
+                {[
+                  { text: "No credit card" },
+                  { text: "Free to start" },
+                  { text: "5 min setup" },
+                ].map((item, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground"
+                  >
+                    <div className="w-4 h-4 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
+                      <Check
+                        className="w-2.5 h-2.5 text-primary"
+                        strokeWidth={3}
+                      />
+                    </div>
+                    <span>{item.text}</span>
+                  </div>
+                ))}
+              </motion.div>
+            </motion.div>
+
+            {/* Right: Dashboard preview */}
+            <motion.div
+              initial={{ opacity: 0, y: 32, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{
+                delay: 0.25,
+                duration: 0.7,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              className="relative flex justify-center lg:justify-end"
+            >
+              {/* Glow behind card */}
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-teal-400/10 rounded-3xl blur-2xl scale-95 -z-10" />
+
+              {/* Main card */}
+              <div className="w-full max-w-sm rounded-2xl border border-border/60 bg-background/90 backdrop-blur-xl shadow-2xl overflow-hidden">
+                {/* Card header */}
+                <div className="px-6 pt-6 pb-4 border-b border-border/50 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FlowBooksLogo size={22} />
+                    <span className="text-sm font-semibold">FlowBooks</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-full">
+                    June 2025
+                  </span>
+                </div>
+
+                {/* Summary row */}
+                <div className="px-6 py-5">
+                  <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">
+                    Net Profit
+                  </p>
+                  <div className="flex items-end gap-3">
+                    <span className="text-4xl font-bold font-serif tracking-tight">
+                      $8,450
+                    </span>
+                    <span className="mb-1 text-sm font-semibold text-emerald-500 flex items-center gap-1">
+                      <TrendingUp className="w-3.5 h-3.5" /> +23%
+                    </span>
+                  </div>
+                </div>
+
+                {/* Income / Expenses rows */}
+                <div className="px-6 space-y-3 pb-5">
+                  {[
+                    {
+                      label: "Income",
+                      value: "+$9,200",
+                      color: "text-emerald-600",
+                      bg: "bg-emerald-50 dark:bg-emerald-950/40",
+                      bar: "bg-emerald-400",
+                      pct: "80%",
+                    },
+                    {
+                      label: "Expenses",
+                      value: "-$750",
+                      color: "text-red-500",
+                      bg: "bg-red-50 dark:bg-red-950/40",
+                      bar: "bg-red-400",
+                      pct: "10%",
+                    },
+                  ].map((row) => (
+                    <div
+                      key={row.label}
+                      className={`rounded-xl px-4 py-3 ${row.bg}`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-medium text-muted-foreground">
+                          {row.label}
+                        </span>
+                        <span className={`text-sm font-bold ${row.color}`}>
+                          {row.value}
+                        </span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-black/5 dark:bg-white/10 overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: row.pct }}
+                          transition={{
+                            delay: 0.8,
+                            duration: 0.9,
+                            ease: "easeOut",
+                          }}
+                          className={`h-full rounded-full ${row.bar}`}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Sparkline chart */}
+                <div className="h-28 px-2 pb-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={incomeData}
+                      margin={{ top: 4, right: 8, left: 8, bottom: 4 }}
+                    >
+                      <defs>
+                        <linearGradient
+                          id="heroLineGrad"
+                          x1="0"
+                          y1="0"
+                          x2="1"
+                          y2="0"
+                        >
+                          <stop
+                            offset="0%"
+                            stopColor="hsl(var(--primary))"
+                            stopOpacity={0.6}
+                          />
+                          <stop
+                            offset="100%"
+                            stopColor="#2dd4bf"
+                            stopOpacity={1}
+                          />
+                        </linearGradient>
+                      </defs>
+                      <Line
+                        type="monotone"
+                        dataKey="income"
+                        stroke="url(#heroLineGrad)"
+                        strokeWidth={2.5}
+                        dot={false}
+                        strokeLinecap="round"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Floating invoice chip */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 1, duration: 0.5 }}
+                className="absolute -left-6 top-1/3 hidden lg:flex items-center gap-2.5 bg-background border border-border shadow-xl rounded-xl px-4 py-2.5"
+              >
+                <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/50 flex items-center justify-center flex-shrink-0">
+                  <FileText className="w-4 h-4 text-blue-500" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold leading-none mb-0.5">
+                    Invoice sent
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Acme Corp Â· $2,400
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Floating tax chip */}
+              <motion.div
+                animate={{ y: [0, -8, 0] }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 0.5,
+                }}
+                className="absolute -right-4 bottom-16 hidden lg:flex items-center gap-2.5 bg-background border border-border shadow-xl rounded-xl px-4 py-2.5"
+              >
+                <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/50 flex items-center justify-center flex-shrink-0">
+                  <Shield className="w-4 h-4 text-amber-500" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold leading-none mb-0.5">
+                    Q2 Tax estimate
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Set aside $1,690
+                  </p>
+                </div>
+              </motion.div>
+            </motion.div>
+          </div>
+        </div>
       </section>
 
       {/* Features */}
-      <section id="features" className="bg-muted/40 py-20 md:py-28">
+      <section id="features" className="py-20 md:py-28 bg-muted/30">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-14">
+            <motion.span
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium border border-primary/30 bg-primary/5 text-primary mb-4"
+            >
+              <Zap className="w-3.5 h-3.5" /> Everything you need
+            </motion.span>
             <h2 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">
               Built for freelancer workflows
             </h2>
             <p className="text-muted-foreground mt-3 max-w-md mx-auto">
-              Core features designed specifically for freelancers and solo
-              consultants.
+              Every feature designed around how freelancers actually work â€”
+              not adapted from enterprise software.
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -381,15 +692,15 @@ export default function LandingPage() {
                 variants={fadeUp}
                 custom={i}
               >
-                <Card className="h-full hover:shadow-md transition-shadow">
+                <Card className="h-full group hover:shadow-lg hover:border-primary/20 transition-all duration-300 border-border/60">
                   <CardContent className="p-6">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                    <div className="w-11 h-11 rounded-xl bg-primary/10 group-hover:bg-primary/20 flex items-center justify-center mb-4 transition-colors">
                       <f.icon
                         className="w-5 h-5 text-primary"
                         strokeWidth={1.8}
                       />
                     </div>
-                    <h3 className="font-serif font-semibold text-base mb-1.5">
+                    <h3 className="font-serif font-semibold text-base mb-2 group-hover:text-primary transition-colors">
                       {f.title}
                     </h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">
@@ -404,17 +715,26 @@ export default function LandingPage() {
       </section>
 
       {/* How It Works */}
-      <section id="how-it-works" className="py-20 md:py-28">
+      <section id="how-it-works" className="py-20 md:py-28 bg-background">
         <div className="max-w-4xl mx-auto px-6">
-          <div className="text-center mb-14">
+          <div className="text-center mb-16">
+            <motion.span
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium border border-primary/30 bg-primary/5 text-primary mb-4"
+            >
+              <Check className="w-3.5 h-3.5" /> Simple setup
+            </motion.span>
             <h2 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">
-              Get started quickly
+              Up and running in minutes
             </h2>
             <p className="text-muted-foreground mt-3">
-              Three simple steps to begin tracking your finances.
+              Three steps and you're tracking your finances like a pro.
             </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
+
+          <div className="grid md:grid-cols-3 gap-8 md:gap-6">
             {steps.map((step, i) => (
               <motion.div
                 key={step.num}
@@ -423,28 +743,26 @@ export default function LandingPage() {
                 viewport={{ once: true }}
                 variants={fadeUp}
                 custom={i}
-                className="relative text-center md:text-left"
+                className="flex flex-col items-center text-center"
               >
-                <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
-                  <span className="font-serif text-4xl font-bold text-primary/20">
-                    {step.num}
-                  </span>
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                {/* Step icon with number */}
+                <div className="relative mb-6">
+                  <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center shadow-sm">
                     <step.icon
-                      className="w-5 h-5 text-primary"
-                      strokeWidth={1.8}
+                      className="w-7 h-7 text-primary"
+                      strokeWidth={1.6}
                     />
                   </div>
+                  <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-primary text-primary-foreground text-[11px] font-bold flex items-center justify-center shadow-md">
+                    {i + 1}
+                  </span>
                 </div>
                 <h3 className="font-serif font-semibold text-lg mb-2">
                   {step.title}
                 </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
+                <p className="text-sm text-muted-foreground leading-relaxed max-w-[200px]">
                   {step.desc}
                 </p>
-                {i < steps.length - 1 && (
-                  <ChevronRight className="hidden md:block absolute -right-5 top-6 w-5 h-5 text-border" />
-                )}
               </motion.div>
             ))}
           </div>
@@ -452,9 +770,17 @@ export default function LandingPage() {
       </section>
 
       {/* Comparison Table */}
-      <section id="compare" className="bg-muted/40 py-20 md:py-28">
+      <section id="compare" className="bg-muted/30 py-20 md:py-28">
         <div className="max-w-4xl mx-auto px-6">
           <div className="text-center mb-14">
+            <motion.span
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium border border-primary/30 bg-primary/5 text-primary mb-4"
+            >
+              <BarChart3 className="w-3.5 h-3.5" /> How we compare
+            </motion.span>
             <h2 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">
               How FlowBooks stacks up
             </h2>
@@ -464,14 +790,20 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-border">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="overflow-x-auto rounded-2xl border border-border shadow-sm"
+          >
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/60">
                   <th className="text-left px-5 py-4 font-serif font-semibold text-base w-[40%]">
                     Feature
                   </th>
-                  <th className="px-4 py-4 text-center font-serif font-semibold text-primary">
+                  <th className="px-4 py-4 text-center font-serif font-semibold text-primary bg-primary/5">
                     <div className="flex flex-col items-center gap-1">
                       <FlowBooksLogo size={20} />
                       FlowBooks
@@ -479,7 +811,6 @@ export default function LandingPage() {
                   </th>
                   <th className="px-4 py-4 text-center font-medium text-muted-foreground">
                     <div className="flex flex-col items-center gap-1">
-                      {/* Google Sheets official icon */}
                       <svg
                         width="20"
                         height="20"
@@ -522,7 +853,6 @@ export default function LandingPage() {
                   </th>
                   <th className="px-4 py-4 text-center font-medium text-muted-foreground">
                     <div className="flex flex-col items-center gap-1">
-                      {/* QuickBooks official icon */}
                       <svg
                         width="20"
                         height="20"
@@ -551,7 +881,7 @@ export default function LandingPage() {
                     <td className="px-5 py-3.5 text-sm font-medium">
                       {row.feature}
                     </td>
-                    <td className="px-4 py-3.5 text-center">
+                    <td className="px-4 py-3.5 text-center bg-primary/[0.03]">
                       <ComparisonCell value={row.flowbooks} />
                     </td>
                     <td className="px-4 py-3.5 text-center">
@@ -564,7 +894,7 @@ export default function LandingPage() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </motion.div>
 
           <p className="text-xs text-muted-foreground text-center mt-4">
             QuickBooks pricing based on publicly listed Simple Start plan as of
@@ -573,21 +903,77 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Income & Expense Analytics Section */}
-      <section className="py-20 md:py-28">
+      {/* Financial Insights Preview */}
+      <section className="py-20 md:py-28 bg-background">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-14">
+            <motion.span
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium border border-primary/30 bg-primary/5 text-primary mb-4"
+            >
+              <TrendingUp className="w-3.5 h-3.5" /> Live insights
+            </motion.span>
             <h2 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">
-              Visualize your financial health
+              Your finances, at a glance
             </h2>
-            <p className="text-muted-foreground mt-3 max-w-md mx-auto">
-              Interactive charts and real-time insights to understand your
-              income patterns and spending habits.
+            <p className="text-muted-foreground mt-3 max-w-xl mx-auto">
+              Beautiful charts that update in real time â€” income trends,
+              expense breakdowns, and profit margins all in one dashboard.
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-8">
-            {/* Income Trends Chart */}
+          {/* Stat pills */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+            {[
+              {
+                label: "Monthly Income",
+                value: "$6,100",
+                change: "+23%",
+                up: true,
+              },
+              { label: "Expenses", value: "$1,600", change: "-8%", up: false },
+              {
+                label: "Net Profit",
+                value: "$4,500",
+                change: "+31%",
+                up: true,
+              },
+              {
+                label: "Profit Margin",
+                value: "73.8%",
+                change: "+4pts",
+                up: true,
+              },
+            ].map((stat, i) => (
+              <motion.div
+                key={stat.label}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                variants={fadeUp}
+                custom={i}
+              >
+                <Card className="border-border/60 hover:border-primary/20 hover:shadow-md transition-all duration-300">
+                  <CardContent className="p-4">
+                    <p className="text-xs text-muted-foreground mb-1">
+                      {stat.label}
+                    </p>
+                    <p className="text-xl font-bold font-serif">{stat.value}</p>
+                    <p
+                      className={`text-xs font-semibold mt-1 ${stat.up ? "text-emerald-500" : "text-red-500"}`}
+                    >
+                      {stat.change} vs last month
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Charts row */}
+          <div className="grid lg:grid-cols-2 gap-6 items-stretch">
             <motion.div
               initial="hidden"
               whileInView="visible"
@@ -595,66 +981,69 @@ export default function LandingPage() {
               variants={fadeUp}
               custom={0}
             >
-              <Card className="h-full hover:shadow-md transition-shadow">
-                <CardContent className="p-6 md:p-8">
-                  <div className="mb-6">
-                    <h3 className="font-serif font-semibold text-lg mb-1">
-                      Income vs Goals
+              <Card className="border-border/60 hover:shadow-lg transition-all duration-300 h-full">
+                <CardContent className="p-6 h-full flex flex-col">
+                  <div className="mb-5">
+                    <h3 className="font-serif font-semibold text-base">
+                      Income vs Expenses
                     </h3>
-                    <p className="text-sm text-muted-foreground">
-                      Track your monthly income against your targets
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      6-month overview
                     </p>
                   </div>
-                  <div className="w-full h-80 -mx-4 md:-mx-8">
+                  <div className="flex-1 min-h-0 h-56">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart
-                        data={incomeData}
-                        margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
+                      <BarChart
+                        data={monthlyData}
+                        margin={{ top: 4, right: 4, left: -20, bottom: 0 }}
+                        barGap={4}
                       >
                         <CartesianGrid
                           strokeDasharray="3 3"
                           stroke="hsl(var(--border))"
+                          vertical={false}
                         />
                         <XAxis
                           dataKey="month"
                           stroke="hsl(var(--muted-foreground))"
+                          tick={{ fontSize: 11 }}
+                          axisLine={false}
+                          tickLine={false}
                         />
-                        <YAxis stroke="hsl(var(--muted-foreground))" />
+                        <YAxis
+                          stroke="hsl(var(--muted-foreground))"
+                          tick={{ fontSize: 11 }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
                         <Tooltip
                           contentStyle={{
                             backgroundColor: "hsl(var(--card))",
                             border: "1px solid hsl(var(--border))",
-                            borderRadius: "8px",
+                            borderRadius: "10px",
+                            fontSize: 12,
                           }}
-                          formatter={(value) => `$${value.toLocaleString()}`}
+                          formatter={(v: number) => [`$${v.toLocaleString()}`]}
                         />
-                        <Legend />
-                        <Line
-                          type="monotone"
+                        <Bar
                           dataKey="income"
-                          stroke="hsl(var(--primary))"
-                          strokeWidth={2}
-                          dot={{ fill: "hsl(var(--primary))", r: 4 }}
-                          activeDot={{ r: 6 }}
-                          name="Actual Income"
+                          fill="hsl(var(--primary))"
+                          name="Income"
+                          radius={[4, 4, 0, 0]}
                         />
-                        <Line
-                          type="monotone"
-                          dataKey="goal"
-                          stroke="hsl(var(--muted-foreground))"
-                          strokeWidth={2}
-                          strokeDasharray="5 5"
-                          dot={{ fill: "hsl(var(--muted-foreground))", r: 4 }}
-                          name="Income Goal"
+                        <Bar
+                          dataKey="expenses"
+                          fill="#f87171"
+                          name="Expenses"
+                          radius={[4, 4, 0, 0]}
                         />
-                      </LineChart>
+                      </BarChart>
                     </ResponsiveContainer>
                   </div>
                 </CardContent>
               </Card>
             </motion.div>
 
-            {/* Expense Breakdown Chart */}
             <motion.div
               initial="hidden"
               whileInView="visible"
@@ -662,128 +1051,86 @@ export default function LandingPage() {
               variants={fadeUp}
               custom={1}
             >
-              <Card className="h-full hover:shadow-md transition-shadow">
-                <CardContent className="p-6 md:p-8">
-                  <div className="mb-6">
-                    <h3 className="font-serif font-semibold text-lg mb-1">
+              <Card className="border-border/60 hover:shadow-lg transition-all duration-300 h-full">
+                <CardContent className="p-6 h-full flex flex-col">
+                  <div className="mb-5">
+                    <h3 className="font-serif font-semibold text-base">
                       Expense Breakdown
                     </h3>
-                    <p className="text-sm text-muted-foreground">
-                      See where your money goes at a glance
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      By category this month
                     </p>
                   </div>
-                  <div className="w-full h-80">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={expenseData}
-                          cx="50%"
-                          cy="45%"
-                          labelLine={false}
-                          label={false}
-                          outerRadius={90}
-                          innerRadius={0}
-                          fill="#8884d8"
-                          dataKey="value"
-                          paddingAngle={2}
+                  <div className="flex-1 flex items-center gap-6">
+                    <div className="h-48 w-48 flex-shrink-0">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={expenseData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={48}
+                            outerRadius={72}
+                            paddingAngle={3}
+                            dataKey="value"
+                          >
+                            {expenseData.map((entry, index) => (
+                              <Cell key={index} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "hsl(var(--card))",
+                              border: "1px solid hsl(var(--border))",
+                              borderRadius: "10px",
+                              fontSize: 12,
+                            }}
+                            formatter={(v: number) => [`$${v}`]}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="flex-1 space-y-2.5">
+                      {expenseData.map((item) => (
+                        <div
+                          key={item.name}
+                          className="flex items-center justify-between gap-2"
                         >
-                          {expenseData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          formatter={(value) => `$${value}`}
-                          contentStyle={{
-                            backgroundColor: "hsl(var(--card))",
-                            border: "1px solid hsl(var(--border))",
-                            borderRadius: "8px",
-                          }}
-                        />
-                        <Legend
-                          verticalAlign="bottom"
-                          height={36}
-                          formatter={(
-                            value,
-                            entry: { payload: { value: number } },
-                          ) => `${value}: $${entry.payload.value}`}
-                          wrapperStyle={{ fontSize: "13px" }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span
+                              className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                              style={{ backgroundColor: item.color }}
+                            />
+                            <span className="text-xs text-muted-foreground truncate">
+                              {item.name}
+                            </span>
+                          </div>
+                          <span className="text-xs font-semibold flex-shrink-0">
+                            ${item.value}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             </motion.div>
           </div>
-
-          {/* Income vs Expenses Comparison */}
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeUp}
-            custom={2}
-            className="mt-8"
-          >
-            <Card className="hover:shadow-md transition-shadow">
-              <CardContent className="p-6 md:p-8">
-                <div className="mb-6">
-                  <h3 className="font-serif font-semibold text-lg mb-1">
-                    Income vs Expenses
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Monthly comparison to track your profitability
-                  </p>
-                </div>
-                <div className="w-full h-80 -mx-4 md:-mx-8">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={monthlyData}
-                      margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
-                    >
-                      <CartesianGrid
-                        strokeDasharray="3 3"
-                        stroke="hsl(var(--border))"
-                      />
-                      <XAxis
-                        dataKey="month"
-                        stroke="hsl(var(--muted-foreground))"
-                      />
-                      <YAxis stroke="hsl(var(--muted-foreground))" />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "hsl(var(--card))",
-                          border: "1px solid hsl(var(--border))",
-                          borderRadius: "8px",
-                        }}
-                        formatter={(value) => `$${value.toLocaleString()}`}
-                      />
-                      <Legend />
-                      <Bar
-                        dataKey="income"
-                        fill="hsl(var(--primary))"
-                        name="Income"
-                        radius={[8, 8, 0, 0]}
-                      />
-                      <Bar
-                        dataKey="expenses"
-                        fill="hsl(var(--destructive))"
-                        name="Expenses"
-                        radius={[8, 8, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
         </div>
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="py-20 md:py-28">
+      <section id="faq" className="py-20 md:py-28 bg-muted/30">
         <div className="max-w-3xl mx-auto px-6">
           <div className="text-center mb-14">
+            <motion.span
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium border border-primary/30 bg-primary/5 text-primary mb-4"
+            >
+              <FileText className="w-3.5 h-3.5" /> FAQ
+            </motion.span>
             <h2 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">
               Frequently asked questions
             </h2>
@@ -791,7 +1138,7 @@ export default function LandingPage() {
               Everything you need to know before getting started.
             </p>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {faqs.map((faq, i) => (
               <motion.div
                 key={i}
@@ -801,9 +1148,9 @@ export default function LandingPage() {
                 variants={fadeUp}
                 custom={i}
               >
-                <Card>
+                <Card className="border-border/60 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
                   <CardContent className="p-5">
-                    <h3 className="font-serif font-semibold text-sm mb-2">
+                    <h3 className="font-serif font-semibold text-base mb-2">
                       {faq.q}
                     </h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">
@@ -818,40 +1165,79 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="bg-muted/40 py-20 md:py-28">
+      <section className="relative py-24 md:py-32 overflow-hidden">
+        {/* Background */}
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-teal-500/5" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-primary/10 rounded-full blur-3xl" />
+        </div>
         <div className="max-w-2xl mx-auto px-6 text-center">
-          <h2 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">
-            Ready to take control?
-          </h2>
-          <p className="text-muted-foreground mt-3">
-            Free to start. No credit card required.
-          </p>
-          {!loading && user ? (
-            <Button
-              size="lg"
-              className="mt-8"
-              onClick={() => navigate("/dashboard")}
-            >
-              Go to Dashboard <ArrowRight className="w-4 h-4 ml-1" />
-            </Button>
-          ) : (
-            <Button
-              size="lg"
-              className="mt-8"
-              onClick={() => navigate("/signup")}
-            >
-              Create your free account <ArrowRight className="w-4 h-4 ml-1" />
-            </Button>
-          )}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="font-serif text-4xl md:text-5xl font-bold tracking-tight mb-4">
+              Ready to take control?
+            </h2>
+            <p className="text-muted-foreground text-lg mb-8">
+              Free to start. No credit card. Set up in 5 minutes.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              {!loading && user ? (
+                <Button
+                  size="lg"
+                  className="h-12 px-8 text-base rounded-xl shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-200"
+                  onClick={() => navigate("/dashboard")}
+                >
+                  Go to Dashboard <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    size="lg"
+                    className="h-12 px-8 text-base rounded-xl shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-200"
+                    onClick={() => navigate("/signup")}
+                  >
+                    Create free account <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="h-12 px-8 text-base rounded-xl border-2 hover:-translate-y-0.5 transition-all duration-200"
+                    onClick={() => navigate("/login")}
+                  >
+                    Sign in
+                  </Button>
+                </>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-5 mt-6">
+              {["No credit card", "Free to start", "5 min setup"].map((t) => (
+                <div
+                  key={t}
+                  className="flex items-center gap-1.5 text-sm text-muted-foreground"
+                >
+                  <div className="w-4 h-4 rounded-full bg-primary/15 flex items-center justify-center">
+                    <Check
+                      className="w-2.5 h-2.5 text-primary"
+                      strokeWidth={3}
+                    />
+                  </div>
+                  {t}
+                </div>
+              ))}
+            </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border bg-muted/30">
+      <footer className="border-t border-border bg-muted/20">
         <div className="max-w-6xl mx-auto px-6 pt-14 pb-8">
-          {/* Top grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
-            {/* Brand column */}
+            {/* Brand */}
             <div className="col-span-2 md:col-span-1 space-y-4">
               <div className="flex items-center gap-2">
                 <FlowBooksLogo size={30} />
@@ -861,9 +1247,8 @@ export default function LandingPage() {
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Financial clarity for freelancers. Track income, estimate taxes,
-                and invoice clients all in one place.
+                and invoice clients — all in one place.
               </p>
-              {/* Social links */}
               <div className="flex items-center gap-3 pt-1">
                 <a
                   href="https://github.com/MuhammadTanveerAbbas/flowbooks"
@@ -982,7 +1367,6 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Divider */}
           <div className="border-t border-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
             <p className="text-xs text-muted-foreground">
               © {new Date().getFullYear()} FlowBooks. MIT License.

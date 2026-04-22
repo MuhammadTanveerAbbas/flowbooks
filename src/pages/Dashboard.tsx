@@ -129,17 +129,15 @@ export default function Dashboard() {
         .eq("user_id", user.id)
         .gte("date", sixMonthsAgo)
         .order("date", { ascending: false }),
-      supabase.from("profiles").select("*").eq("id", user.id).single(),
+      supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
     ])
       .then(([incRes, expRes, profRes]) => {
-        if (incRes.error || expRes.error || profRes.error) {
-          if (import.meta.env.DEV) {
-            console.error(
-              "Dashboard data fetch error:",
-              incRes.error || expRes.error || profRes.error,
-            );
-          }
-          return;
+        if (import.meta.env.DEV) {
+          if (incRes.error) console.error("Income fetch error:", incRes.error);
+          if (expRes.error)
+            console.error("Expenses fetch error:", expRes.error);
+          if (profRes.error)
+            console.error("Profile fetch error:", profRes.error);
         }
         const incomeData = (incRes.data || []) as IncomeRecord[];
         const expenseData = (expRes.data || []) as ExpenseRecord[];

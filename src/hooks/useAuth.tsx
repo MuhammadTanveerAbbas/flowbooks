@@ -34,59 +34,101 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const fetchProfile = async (userId: string): Promise<boolean> => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("onboarding_complete")
-      .eq("id", userId)
-      .maybeSingle();
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("onboarding_complete")
+        .eq("id", userId)
+        .maybeSingle();
 
-    if (error) {
-      // Only log in development
-      if (import.meta.env.DEV) {
-        console.error("Error fetching profile:", error);
+      if (error) {
+        if (import.meta.env.DEV) {
+          console.error("Error fetching profile:", error);
+        }
+        // Treat fetch failure as onboarding not complete so user can set up profile
+        setOnboardingComplete(false);
+        return false;
       }
+
+      // If no profile row yet (trigger may not have fired), treat as incomplete
+      const complete = data?.onboarding_complete ?? false;
+      setOnboardingComplete(complete);
+      return complete;
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.error("fetchProfile exception:", err);
+      }
+      setOnboardingComplete(false);
       return false;
     }
-
-    const complete = data?.onboarding_complete ?? false;
-    setOnboardingComplete(complete);
-    return complete;
   };
 
   useEffect(() => {
+    let mounted = true;
+    let initializing = true;
+
+    const initAuth = async () => {
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
+        if (!mounted) return;
+
+        if (error) {
+          if (import.meta.env.DEV) {
+            console.error("[Auth] Session fetch error:", error);
+          }
+          setSession(null);
+          setOnboardingComplete(null);
+          setLoading(false);
+          initializing = false;
+          return;
+        }
+
+        setSession(session ?? null);
+        if (session?.user) {
+          await fetchProfile(session.user.id);
+        } else {
+          setOnboardingComplete(null);
+        }
+        setLoading(false);
+        initializing = false;
+      } catch (err) {
+        if (!mounted) return;
+        if (import.meta.env.DEV) {
+          console.error("[Auth] Session error:", err);
+        }
+        setSession(null);
+        setOnboardingComplete(null);
+        setLoading(false);
+        initializing = false;
+      }
+    };
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      console.log('[Auth] State change:', _event, session?.user?.email);
-      setSession(session ?? null);
-      if (session?.user) {
-        await fetchProfile(session.user.id);
-      } else {
-        setOnboardingComplete(null);
-      }
-      setLoading(false);
-    });
-
-    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
-      console.log('[Auth] Initial session:', session?.user?.email, error);
-      if (error) {
-        console.error('[Auth] Session fetch error:', error);
+      if (!mounted || initializing) return;
+      if (import.meta.env.DEV) {
+        console.log("[Auth] State change:", _event, session?.user?.email);
       }
       setSession(session ?? null);
       if (session?.user) {
         await fetchProfile(session.user.id);
       } else {
         setOnboardingComplete(null);
+        setLoading(false);
       }
-      setLoading(false);
-    }).catch((err) => {
-      console.error('[Auth] Session error:', err);
-      setSession(null);
-      setOnboardingComplete(null);
-      setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    initAuth();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const refreshProfile = async () => {
@@ -97,7 +139,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
+    if (error && import.meta.env.DEV) {
+      console.error("[Auth] Sign out error:", error);
+    }
+    setSession(null);
+    setOnboardingComplete(null);
+    setLoading(false);
   };
 
   return (

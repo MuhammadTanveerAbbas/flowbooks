@@ -133,12 +133,8 @@ export default function Onboarding() {
       // Refresh profile state and wait for it to complete
       await refreshProfile();
 
-      // Give the context a moment to update
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
       toast.success("You're all set! Welcome to FlowBooks.");
-      // Use window.location to force a full page reload with fresh auth state
-      window.location.href = "/dashboard";
+      navigate("/dashboard", { replace: true });
     } catch (error) {
       if (import.meta.env.DEV) {
         console.error("Onboarding error:", error);

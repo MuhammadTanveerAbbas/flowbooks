@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { PageLoader } from "@/components/PageLoader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Calculator, PiggyBank, TrendingUp, AlertTriangle } from "lucide-react";
@@ -25,7 +26,10 @@ export default function TaxPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     const year = new Date().getFullYear();
     const startOfYear = `${year}-01-01`;
 
@@ -69,12 +73,7 @@ export default function TaxPage() {
   const currentQuarter = Math.ceil((new Date().getMonth() + 1) / 3);
   const selfEmploymentTax = Math.max(0, netProfit * 0.153);
 
-  if (loading)
-    return (
-      <div className="p-8 text-center text-muted-foreground text-sm">
-        Loading…
-      </div>
-    );
+  if (loading) return <PageLoader />;
 
   return (
     <div className="space-y-6">
