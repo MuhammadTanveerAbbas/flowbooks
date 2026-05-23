@@ -6,6 +6,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { FlowBooksLogo } from "@/components/FlowBooksLogo";
+import { firstSchemaError, loginSchema } from "@/lib/schemas";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -15,10 +16,15 @@ export default function Login() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    const parsed = loginSchema.safeParse({ email, password });
+    if (!parsed.success) {
+      toast.error(firstSchemaError(parsed.error));
+      return;
+    }
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+      email: parsed.data.email,
+      password: parsed.data.password,
     });
     setLoading(false);
     if (error) {

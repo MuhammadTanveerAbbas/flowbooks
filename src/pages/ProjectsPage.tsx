@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Plus, FolderKanban, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { firstSchemaError, projectSchema } from "@/lib/schemas";
 
 interface Project {
   id: string;
@@ -90,23 +91,28 @@ export default function ProjectsPage() {
     e.preventDefault();
     if (!user) return;
 
-    const budget = form.budget ? parseFloat(form.budget) : 0;
-    if (form.budget && (isNaN(budget) || budget < 0)) {
-      toast.error("Please enter a valid budget");
+    const parsed = projectSchema.safeParse({
+      ...form,
+      budget: form.budget === "" ? 0 : form.budget,
+    });
+    if (!parsed.success) {
+      toast.error(firstSchemaError(parsed.error));
       return;
     }
+    const values = parsed.data;
 
     if (editingId) {
       const { error } = await supabase
         .from("projects")
         .update({
-          name: form.name,
-          description: form.description || null,
-          status: form.status,
-          budget: budget,
-          client_id: form.client_id || null,
+          name: values.name,
+          description: values.description,
+          status: values.status,
+          budget: values.budget,
+          client_id: values.client_id,
         })
-        .eq("id", editingId);
+        .eq("id", editingId)
+        .eq("user_id", user.id);
 
       if (error) {
         toast.error(error.message);
@@ -116,11 +122,11 @@ export default function ProjectsPage() {
     } else {
       const { error } = await supabase.from("projects").insert({
         user_id: user.id,
-        name: form.name,
-        description: form.description || null,
-        status: form.status,
-        budget: budget,
-        client_id: form.client_id || null,
+        name: values.name,
+        description: values.description,
+        status: values.status,
+        budget: values.budget,
+        client_id: values.client_id,
       });
 
       if (error) {
@@ -160,10 +166,13 @@ export default function ProjectsPage() {
   const handleDelete = async () => {
     if (!deleteId) return;
 
+    if (!user) return;
+
     const { error } = await supabase
       .from("projects")
       .delete()
-      .eq("id", deleteId);
+      .eq("id", deleteId)
+      .eq("user_id", user.id);
 
     if (error) {
       toast.error(error.message);

@@ -41,6 +41,7 @@ import {
 import { Plus, DollarSign, TrendingUp, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { firstSchemaError, incomeSchema } from "@/lib/schemas";
 
 interface IncomeEntry {
   id: string;
@@ -100,23 +101,25 @@ export default function IncomePage() {
     e.preventDefault();
     if (!user) return;
 
-    const amount = parseFloat(form.amount);
-    if (isNaN(amount) || amount <= 0) {
-      toast.error("Please enter a valid amount greater than 0");
+    const parsed = incomeSchema.safeParse(form);
+    if (!parsed.success) {
+      toast.error(firstSchemaError(parsed.error));
       return;
     }
+    const values = parsed.data;
 
     if (editingId) {
       const { error } = await supabase
         .from("income")
         .update({
-          description: form.description,
-          amount: amount,
-          date: form.date,
-          status: form.status,
-          client_id: form.client_id || null,
+          description: values.description,
+          amount: values.amount,
+          date: values.date,
+          status: values.status,
+          client_id: values.client_id,
         })
-        .eq("id", editingId);
+        .eq("id", editingId)
+        .eq("user_id", user.id);
 
       if (error) {
         toast.error(error.message);
@@ -126,11 +129,11 @@ export default function IncomePage() {
     } else {
       const { error } = await supabase.from("income").insert({
         user_id: user.id,
-        description: form.description,
-        amount: amount,
-        date: form.date,
-        status: form.status,
-        client_id: form.client_id || null,
+        description: values.description,
+        amount: values.amount,
+        date: values.date,
+        status: values.status,
+        client_id: values.client_id,
       });
 
       if (error) {
@@ -167,7 +170,13 @@ export default function IncomePage() {
   const handleDelete = async () => {
     if (!deleteId) return;
 
-    const { error } = await supabase.from("income").delete().eq("id", deleteId);
+    if (!user) return;
+
+    const { error } = await supabase
+      .from("income")
+      .delete()
+      .eq("id", deleteId)
+      .eq("user_id", user.id);
 
     if (error) {
       toast.error(error.message);

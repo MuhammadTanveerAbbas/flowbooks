@@ -6,6 +6,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { FlowBooksLogo } from "@/components/FlowBooksLogo";
+import { firstSchemaError, signupSchema } from "@/lib/schemas";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -16,14 +17,18 @@ export default function Signup() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password.length < 6) { toast.error("Password must be at least 6 characters"); return; }
+    const parsed = signupSchema.safeParse({ fullName, email, password });
+    if (!parsed.success) {
+      toast.error(firstSchemaError(parsed.error));
+      return;
+    }
     setLoading(true);
     const { error } = await supabase.auth.signUp({
-      email,
-      password,
+      email: parsed.data.email,
+      password: parsed.data.password,
       options: {
-        data: { full_name: fullName },
-        emailRedirectTo: window.location.origin,
+        data: { full_name: parsed.data.fullName },
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
     setLoading(false);

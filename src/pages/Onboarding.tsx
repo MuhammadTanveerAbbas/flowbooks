@@ -24,6 +24,7 @@ import {
   Check,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { clientSchema, firstSchemaError, profileSchema } from "@/lib/schemas";
 
 const steps = [
   {
@@ -44,7 +45,7 @@ const steps = [
     desc: "Optional  you can always add clients later.",
     icon: Users,
   },
-];
+] as const;
 
 export default function Onboarding() {
   const { user, refreshProfile } = useAuth();
@@ -71,6 +72,30 @@ export default function Onboarding() {
 
   const handleFinish = async () => {
     if (!user) return;
+    const profile = profileSchema.safeParse({
+      country,
+      tax_status: taxStatus,
+      currency,
+      monthly_income_goal: monthlyGoal,
+      tax_saving_percent: taxPercent,
+    });
+    if (!profile.success) {
+      toast.error(firstSchemaError(profile.error));
+      return;
+    }
+
+    const firstClient = clientName.trim()
+      ? clientSchema.safeParse({
+          name: clientName,
+          email: clientEmail,
+          company: clientCompany,
+        })
+      : null;
+    if (firstClient && !firstClient.success) {
+      toast.error(firstSchemaError(firstClient.error));
+      return;
+    }
+
     setSaving(true);
 
     try {
@@ -78,11 +103,11 @@ export default function Onboarding() {
       const { data: updateData, error: profileError } = await supabase
         .from("profiles")
         .update({
-          country,
-          tax_status: taxStatus,
-          currency,
-          monthly_income_goal: parseFloat(monthlyGoal) || 0,
-          tax_saving_percent: parseFloat(taxPercent) || 25,
+          country: profile.data.country,
+          tax_status: profile.data.tax_status,
+          currency: profile.data.currency,
+          monthly_income_goal: profile.data.monthly_income_goal,
+          tax_saving_percent: profile.data.tax_saving_percent,
           onboarding_complete: true,
         })
         .eq("id", user.id)
@@ -90,15 +115,15 @@ export default function Onboarding() {
 
       // If no rows were updated, the profile doesn't exist - create it
       if (!updateData || updateData.length === 0) {
-        const { data: insertData, error: insertError } = await supabase
+        const { error: insertError } = await supabase
           .from("profiles")
           .insert({
             id: user.id,
-            country,
-            tax_status: taxStatus,
-            currency,
-            monthly_income_goal: parseFloat(monthlyGoal) || 0,
-            tax_saving_percent: parseFloat(taxPercent) || 25,
+            country: profile.data.country,
+            tax_status: profile.data.tax_status,
+            currency: profile.data.currency,
+            monthly_income_goal: profile.data.monthly_income_goal,
+            tax_saving_percent: profile.data.tax_saving_percent,
             onboarding_complete: true,
           })
           .select();
@@ -116,17 +141,19 @@ export default function Onboarding() {
         return;
       }
 
-      if (clientName.trim()) {
+      if (firstClient?.success) {
         const { error: clientError } = await supabase.from("clients").insert({
           user_id: user.id,
-          name: clientName.trim(),
-          email: clientEmail.trim() || null,
-          company: clientCompany.trim() || null,
+          name: firstClient.data.name,
+          email: firstClient.data.email,
+          company: firstClient.data.company,
         });
 
         if (clientError) {
-          console.error("Failed to save client:", clientError);
           // Don't block onboarding if client creation fails
+          if (import.meta.env.DEV) {
+            console.error("Failed to save client:", clientError);
+          }
         }
       }
 
@@ -149,6 +176,7 @@ export default function Onboarding() {
     center: { x: 0, opacity: 1 },
     exit: (dir: number) => ({ x: dir > 0 ? -80 : 80, opacity: 0 }),
   };
+  const currentStep = steps[step - 1] ?? steps[0];
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
@@ -191,17 +219,17 @@ export default function Onboarding() {
             <div className="mb-6">
               <div className="flex items-center gap-2 mb-1">
                 {(() => {
-                  const Icon = steps[step - 1].icon;
+                  const Icon = currentStep.icon;
                   return (
                     <Icon className="w-5 h-5 text-primary" strokeWidth={1.8} />
                   );
                 })()}
                 <h2 className="font-serif text-xl font-semibold">
-                  {steps[step - 1].title}
+                  {currentStep.title}
                 </h2>
               </div>
               <p className="text-sm text-muted-foreground">
-                {steps[step - 1].desc}
+                {currentStep.desc}
               </p>
             </div>
 

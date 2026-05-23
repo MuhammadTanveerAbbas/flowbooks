@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { firstSchemaError, profileSchema } from "@/lib/schemas";
 
 export default function SettingsPage() {
   const { user, signOut } = useAuth();
@@ -63,18 +64,12 @@ export default function SettingsPage() {
     e.preventDefault();
     if (!user) return;
 
-    const monthlyGoal = parseFloat(profile.monthly_income_goal);
-    const taxPercent = parseFloat(profile.tax_saving_percent);
-
-    if (isNaN(monthlyGoal) || monthlyGoal < 0) {
-      toast.error("Please enter a valid monthly income goal");
+    const parsed = profileSchema.safeParse(profile);
+    if (!parsed.success) {
+      toast.error(firstSchemaError(parsed.error));
       return;
     }
-
-    if (isNaN(taxPercent) || taxPercent < 0 || taxPercent > 100) {
-      toast.error("Tax saving percentage must be between 0 and 100");
-      return;
-    }
+    const values = parsed.data;
 
     setSaving(true);
 
@@ -82,27 +77,32 @@ export default function SettingsPage() {
     const { data: updateData, error: updateError } = await supabase
       .from("profiles")
       .update({
-        full_name: profile.full_name,
-        country: profile.country,
-        tax_status: profile.tax_status,
-        monthly_income_goal: monthlyGoal,
-        tax_saving_percent: taxPercent,
-        currency: profile.currency,
-        updated_at: new Date().toISOString(),
+        full_name: values.full_name,
+        country: values.country,
+        tax_status: values.tax_status,
+        monthly_income_goal: values.monthly_income_goal,
+        tax_saving_percent: values.tax_saving_percent,
+        currency: values.currency,
       })
       .eq("id", user.id)
       .select();
+
+    if (updateError) {
+      setSaving(false);
+      toast.error(updateError.message);
+      return;
+    }
 
     // If no rows updated, create the profile
     if (!updateData || updateData.length === 0) {
       const { error: insertError } = await supabase.from("profiles").insert({
         id: user.id,
-        full_name: profile.full_name,
-        country: profile.country,
-        tax_status: profile.tax_status,
-        monthly_income_goal: monthlyGoal,
-        tax_saving_percent: taxPercent,
-        currency: profile.currency,
+        full_name: values.full_name,
+        country: values.country,
+        tax_status: values.tax_status,
+        monthly_income_goal: values.monthly_income_goal,
+        tax_saving_percent: values.tax_saving_percent,
+        currency: values.currency,
         onboarding_complete: true,
       });
 
@@ -116,11 +116,7 @@ export default function SettingsPage() {
     }
 
     setSaving(false);
-    if (updateError) {
-      toast.error(updateError.message);
-    } else {
-      toast.success("Settings saved");
-    }
+    toast.success("Settings saved");
   };
 
   if (loading)

@@ -87,10 +87,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        setSession(session ?? null);
         if (session?.user) {
-          await fetchProfile(session.user.id);
+          const {
+            data: { user },
+            error: userError,
+          } = await supabase.auth.getUser();
+
+          if (userError || !user) {
+            setSession(null);
+            setOnboardingComplete(null);
+          } else {
+            setSession(session);
+            await fetchProfile(user.id);
+          }
         } else {
+          setSession(null);
           setOnboardingComplete(null);
         }
         setLoading(false);
@@ -111,9 +122,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!mounted || initializing) return;
-      if (import.meta.env.DEV) {
-        console.log("[Auth] State change:", _event, session?.user?.email);
-      }
       setSession(session ?? null);
       if (session?.user) {
         await fetchProfile(session.user.id);

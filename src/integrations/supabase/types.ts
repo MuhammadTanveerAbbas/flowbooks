@@ -61,6 +61,7 @@ export type Database = {
           id: string
           notes: string | null
           receipt_url: string | null
+          updated_at: string
           user_id: string
         }
         Insert: {
@@ -73,6 +74,7 @@ export type Database = {
           id?: string
           notes?: string | null
           receipt_url?: string | null
+          updated_at?: string
           user_id: string
         }
         Update: {
@@ -85,6 +87,7 @@ export type Database = {
           id?: string
           notes?: string | null
           receipt_url?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -101,6 +104,7 @@ export type Database = {
           invoice_id: string | null
           project_id: string | null
           status: string
+          updated_at: string
           user_id: string
         }
         Insert: {
@@ -114,6 +118,7 @@ export type Database = {
           invoice_id?: string | null
           project_id?: string | null
           status?: string
+          updated_at?: string
           user_id: string
         }
         Update: {
@@ -127,6 +132,7 @@ export type Database = {
           invoice_id?: string | null
           project_id?: string | null
           status?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: [

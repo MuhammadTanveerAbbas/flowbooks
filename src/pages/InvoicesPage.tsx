@@ -41,6 +41,7 @@ import {
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { firstSchemaError, invoiceSchema } from "@/lib/schemas";
 
 interface Invoice {
   id: string;
@@ -101,24 +102,26 @@ export default function InvoicesPage() {
     e.preventDefault();
     if (!user) return;
 
-    const amount = parseFloat(form.amount);
-    if (isNaN(amount) || amount <= 0) {
-      toast.error("Please enter a valid amount greater than 0");
+    const parsed = invoiceSchema.safeParse(form);
+    if (!parsed.success) {
+      toast.error(firstSchemaError(parsed.error));
       return;
     }
+    const values = parsed.data;
 
     if (editingId) {
       const { error } = await supabase
         .from("invoices")
         .update({
-          invoice_number: form.invoice_number,
-          amount: amount,
-          client_id: form.client_id || null,
-          status: form.status,
-          due_date: form.due_date || null,
-          notes: form.notes || null,
+          invoice_number: values.invoice_number,
+          amount: values.amount,
+          client_id: values.client_id,
+          status: values.status,
+          due_date: values.due_date,
+          notes: values.notes,
         })
-        .eq("id", editingId);
+        .eq("id", editingId)
+        .eq("user_id", user.id);
 
       if (error) {
         toast.error(error.message);
@@ -128,12 +131,12 @@ export default function InvoicesPage() {
     } else {
       const { error } = await supabase.from("invoices").insert({
         user_id: user.id,
-        invoice_number: form.invoice_number,
-        amount: amount,
-        client_id: form.client_id || null,
-        status: form.status,
-        due_date: form.due_date || null,
-        notes: form.notes || null,
+        invoice_number: values.invoice_number,
+        amount: values.amount,
+        client_id: values.client_id,
+        status: values.status,
+        due_date: values.due_date,
+        notes: values.notes,
       });
 
       if (error) {
@@ -172,10 +175,13 @@ export default function InvoicesPage() {
   const handleDelete = async () => {
     if (!deleteId) return;
 
+    if (!user) return;
+
     const { error } = await supabase
       .from("invoices")
       .delete()
-      .eq("id", deleteId);
+      .eq("id", deleteId)
+      .eq("user_id", user.id);
 
     if (error) {
       toast.error(error.message);
@@ -211,13 +217,14 @@ export default function InvoicesPage() {
     const { error: invErr } = await supabase
       .from("invoices")
       .update({ status: "paid" })
-      .eq("id", id);
+      .eq("id", id)
+      .eq("user_id", user.id);
     if (invErr) {
       toast.error(invErr.message);
       return;
     }
     // Sync to income
-    await supabase.from("income").insert({
+    const { error: incomeError } = await supabase.from("income").insert({
       user_id: user.id,
       description: `Invoice payment`,
       amount,
@@ -226,6 +233,10 @@ export default function InvoicesPage() {
       client_id: clientId,
       invoice_id: id,
     });
+    if (incomeError) {
+      toast.error("Invoice was marked paid, but income sync failed");
+      return;
+    }
     toast.success("Invoice marked as paid & income recorded");
     fetchData();
   };

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -8,6 +8,27 @@ export default function AuthCallback() {
   const location = useLocation();
   const [error, setError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(true);
+
+  const redirectAfterAuth = useCallback(
+    async (userId: string) => {
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("onboarding_complete")
+          .eq("id", userId)
+          .maybeSingle();
+
+        if (data?.onboarding_complete) {
+          navigate("/dashboard", { replace: true });
+        } else {
+          navigate("/onboarding", { replace: true });
+        }
+      } catch {
+        navigate("/onboarding", { replace: true });
+      }
+    },
+    [navigate],
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -28,20 +49,23 @@ export default function AuthCallback() {
         }
 
         // Wait a bit for Supabase to process the session
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 500));
 
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
 
-        if (sessionError) {
-          throw sessionError;
+        if (userError) {
+          throw userError;
         }
 
-        if (!session) {
-          throw new Error("No session created");
+        if (!user) {
+          throw new Error("No user created");
         }
 
         if (mounted) {
-          await redirectAfterAuth(session.user.id);
+          await redirectAfterAuth(user.id);
         }
       } catch (err) {
         const message = err instanceof Error ? err.message : "Unknown error";
@@ -59,25 +83,7 @@ export default function AuthCallback() {
     return () => {
       mounted = false;
     };
-  }, [location, navigate]);
-
-  const redirectAfterAuth = async (userId: string) => {
-    try {
-      const { data } = await supabase
-        .from("profiles")
-        .select("onboarding_complete")
-        .eq("id", userId)
-        .maybeSingle();
-
-      if (data?.onboarding_complete) {
-        navigate("/dashboard", { replace: true });
-      } else {
-        navigate("/onboarding", { replace: true });
-      }
-    } catch (err) {
-      navigate("/onboarding", { replace: true });
-    }
-  };
+  }, [location, navigate, redirectAfterAuth]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">

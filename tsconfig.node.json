@@ -13,10 +13,12 @@
     "noEmit": true,
 
     /* Linting */
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
     "strict": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["vite.config.ts"]
+  "include": ["vite.config.ts", "api"]
 }

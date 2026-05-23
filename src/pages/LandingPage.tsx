@@ -13,7 +13,6 @@ import {
   Globe,
   TrendingUp,
   FileText,
-  ChevronRight,
   Mail,
   Github,
   Twitter,
@@ -33,7 +32,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from "recharts";
 import { useAuth } from "@/hooks/useAuth";
@@ -1023,7 +1021,9 @@ export default function LandingPage() {
                             borderRadius: "10px",
                             fontSize: 12,
                           }}
-                          formatter={(v: number) => [`$${v.toLocaleString()}`]}
+                          formatter={(v) => [
+                            `$${Number(v ?? 0).toLocaleString()}`,
+                          ]}
                         />
                         <Bar
                           dataKey="income"
@@ -1085,7 +1085,7 @@ export default function LandingPage() {
                               borderRadius: "10px",
                               fontSize: 12,
                             }}
-                            formatter={(v: number) => [`$${v}`]}
+                            formatter={(v) => [`$${Number(v ?? 0)}`]}
                           />
                         </PieChart>
                       </ResponsiveContainer>

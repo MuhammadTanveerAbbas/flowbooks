@@ -347,8 +347,8 @@ export default function Dashboard() {
                     tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
                   />
                   <Tooltip
-                    formatter={(value: number) => [
-                      `$${value.toLocaleString()}`,
+                    formatter={(value) => [
+                      `$${Number(value ?? 0).toLocaleString()}`,
                       "",
                     ]}
                     contentStyle={{

@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Plus, Users, Mail, Phone, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { clientSchema, firstSchemaError } from "@/lib/schemas";
 
 interface Client {
   id: string;
@@ -73,17 +74,25 @@ export default function ClientsPage() {
     e.preventDefault();
     if (!user) return;
 
+    const parsed = clientSchema.safeParse(form);
+    if (!parsed.success) {
+      toast.error(firstSchemaError(parsed.error));
+      return;
+    }
+    const values = parsed.data;
+
     if (editingId) {
       const { error } = await supabase
         .from("clients")
         .update({
-          name: form.name,
-          email: form.email || null,
-          company: form.company || null,
-          phone: form.phone || null,
-          notes: form.notes || null,
+          name: values.name,
+          email: values.email,
+          company: values.company,
+          phone: values.phone,
+          notes: values.notes,
         })
-        .eq("id", editingId);
+        .eq("id", editingId)
+        .eq("user_id", user.id);
 
       if (error) {
         toast.error(error.message);
@@ -93,11 +102,11 @@ export default function ClientsPage() {
     } else {
       const { error } = await supabase.from("clients").insert({
         user_id: user.id,
-        name: form.name,
-        email: form.email || null,
-        company: form.company || null,
-        phone: form.phone || null,
-        notes: form.notes || null,
+        name: values.name,
+        email: values.email,
+        company: values.company,
+        phone: values.phone,
+        notes: values.notes,
       });
 
       if (error) {
@@ -128,10 +137,13 @@ export default function ClientsPage() {
   const handleDelete = async () => {
     if (!deleteId) return;
 
+    if (!user) return;
+
     const { error } = await supabase
       .from("clients")
       .delete()
-      .eq("id", deleteId);
+      .eq("id", deleteId)
+      .eq("user_id", user.id);
 
     if (error) {
       toast.error(error.message);

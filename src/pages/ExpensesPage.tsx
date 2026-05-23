@@ -41,6 +41,7 @@ import {
 import { Plus, Receipt, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { expenseSchema, firstSchemaError } from "@/lib/schemas";
 
 const categories = [
   "software",
@@ -101,23 +102,25 @@ export default function ExpensesPage() {
     e.preventDefault();
     if (!user) return;
 
-    const amount = parseFloat(form.amount);
-    if (isNaN(amount) || amount <= 0) {
-      toast.error("Please enter a valid amount greater than 0");
+    const parsed = expenseSchema.safeParse(form);
+    if (!parsed.success) {
+      toast.error(firstSchemaError(parsed.error));
       return;
     }
+    const values = parsed.data;
 
     if (editingId) {
       const { error } = await supabase
         .from("expenses")
         .update({
-          description: form.description,
-          amount: amount,
-          date: form.date,
-          category: form.category,
-          notes: form.notes || null,
+          description: values.description,
+          amount: values.amount,
+          date: values.date,
+          category: values.category,
+          notes: values.notes,
         })
-        .eq("id", editingId);
+        .eq("id", editingId)
+        .eq("user_id", user.id);
 
       if (error) {
         toast.error(error.message);
@@ -127,11 +130,11 @@ export default function ExpensesPage() {
     } else {
       const { error } = await supabase.from("expenses").insert({
         user_id: user.id,
-        description: form.description,
-        amount: amount,
-        date: form.date,
-        category: form.category,
-        notes: form.notes || null,
+        description: values.description,
+        amount: values.amount,
+        date: values.date,
+        category: values.category,
+        notes: values.notes,
       });
 
       if (error) {
@@ -168,10 +171,13 @@ export default function ExpensesPage() {
   const handleDelete = async () => {
     if (!deleteId) return;
 
+    if (!user) return;
+
     const { error } = await supabase
       .from("expenses")
       .delete()
-      .eq("id", deleteId);
+      .eq("id", deleteId)
+      .eq("user_id", user.id);
 
     if (error) {
       toast.error(error.message);
