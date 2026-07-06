@@ -1,7 +1,9 @@
-import { useEffect, useState, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth-context";
+import { useClients } from "@/hooks/use-queries";
+import { useAddClient, useUpdateClient, useDeleteClient } from "@/hooks/use-mutations";
 import { PageLoader } from "@/components/PageLoader";
+import { EmptyState } from "@/components/EmptyState";
+import { ErrorCard } from "@/components/ErrorCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,220 +25,121 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Users, Mail, Phone, Pencil, Trash2 } from "lucide-react";
+import { Plus, Users, Mail, Phone, Pencil, Trash2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
-import { clientSchema, firstSchemaError } from "@/lib/schemas";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { clientSchema } from "@/lib/schemas";
+import type { z } from "zod";
+import { useState } from "react";
 
-interface Client {
-  id: string;
-  name: string;
-  email: string | null;
-  company: string | null;
-  phone: string | null;
-  notes: string | null;
-  created_at: string;
-}
+type ClientForm = z.infer<typeof clientSchema>;
 
 export default function ClientsPage() {
   const { user } = useAuth();
-  const [clients, setClients] = useState<Client[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: clients, isLoading, error } = useClients(user?.id);
+  const addClient = useAddClient(user?.id);
+  const updateClient = useUpdateClient(user?.id);
+  const deleteClient = useDeleteClient(user?.id);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    company: "",
-    phone: "",
-    notes: "",
+
+  const form = useForm<ClientForm>({
+    resolver: zodResolver(clientSchema),
+    defaultValues: { name: "", email: null, company: null, phone: null, notes: null },
   });
 
-  const fetchData = useCallback(async () => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-    const { data } = await supabase
-      .from("clients")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
-    if (data) setClients(data);
-    setLoading(false);
-  }, [user]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  const handleAdd = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-
-    const parsed = clientSchema.safeParse(form);
-    if (!parsed.success) {
-      toast.error(firstSchemaError(parsed.error));
-      return;
-    }
-    const values = parsed.data;
-
-    if (editingId) {
-      const { error } = await supabase
-        .from("clients")
-        .update({
-          name: values.name,
-          email: values.email,
-          company: values.company,
-          phone: values.phone,
-          notes: values.notes,
-        })
-        .eq("id", editingId)
-        .eq("user_id", user.id);
-
-      if (error) {
-        toast.error(error.message);
-        return;
-      }
-      toast.success("Client updated");
-    } else {
-      const { error } = await supabase.from("clients").insert({
-        user_id: user.id,
-        name: values.name,
-        email: values.email,
-        company: values.company,
-        phone: values.phone,
-        notes: values.notes,
-      });
-
-      if (error) {
-        toast.error(error.message);
-        return;
-      }
-      toast.success("Client added");
-    }
-
-    setOpen(false);
+  const openAdd = () => {
     setEditingId(null);
-    setForm({ name: "", email: "", company: "", phone: "", notes: "" });
-    fetchData();
+    form.reset({ name: "", email: null, company: null, phone: null, notes: null });
+    setOpen(true);
   };
 
-  const handleEdit = (client: Client) => {
+  const openEdit = (client: NonNullable<typeof clients>[number]) => {
     setEditingId(client.id);
-    setForm({
+    form.reset({
       name: client.name,
-      email: client.email || "",
-      company: client.company || "",
-      phone: client.phone || "",
-      notes: client.notes || "",
+      email: client.email ?? null,
+      company: client.company ?? null,
+      phone: client.phone ?? null,
+      notes: client.notes ?? null,
     });
     setOpen(true);
   };
 
-  const handleDelete = async () => {
-    if (!deleteId) return;
-
+  const handleSubmit = async (values: ClientForm) => {
     if (!user) return;
-
-    const { error } = await supabase
-      .from("clients")
-      .delete()
-      .eq("id", deleteId)
-      .eq("user_id", user.id);
-
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-
-    toast.success("Client deleted");
-    setDeleteId(null);
-    fetchData();
-  };
-
-  const handleDialogClose = (isOpen: boolean) => {
-    setOpen(isOpen);
-    if (!isOpen) {
-      setEditingId(null);
-      setForm({ name: "", email: "", company: "", phone: "", notes: "" });
+    try {
+      if (editingId) {
+        await updateClient.mutateAsync({ id: editingId, ...values });
+        toast.success("Client updated");
+      } else {
+        await addClient.mutateAsync(values);
+        toast.success("Client added");
+      }
+      setOpen(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Operation failed");
     }
   };
+
+  const handleDelete = async () => {
+    if (!deleteId || !user) return;
+    try {
+      await deleteClient.mutateAsync(deleteId);
+      toast.success("Client deleted");
+      setDeleteId(null);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Delete failed");
+    }
+  };
+
+  if (isLoading) return <PageLoader />;
+  if (error) {
+    return <ErrorCard title="Failed to load clients" message="Please try refreshing the page." />;
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl md:text-3xl font-serif font-semibold tracking-tight">
-            Clients
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            Manage your client relationships.
-          </p>
+          <h1 className="text-2xl md:text-3xl font-serif font-semibold tracking-tight">Clients</h1>
+          <p className="text-muted-foreground text-sm">Manage your client relationships.</p>
         </div>
-        <Dialog open={open} onOpenChange={handleDialogClose}>
+        <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditingId(null); }}>
           <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-1" /> Add Client
-            </Button>
+            <Button onClick={openAdd}><Plus className="w-4 h-4 mr-1" /> Add Client</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>
-                {editingId ? "Edit Client" : "Add Client"}
-              </DialogTitle>
+              <DialogTitle>{editingId ? "Edit Client" : "Add Client"}</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleAdd} className="space-y-4">
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
               <div className="space-y-1.5">
                 <Label>Name *</Label>
-                <Input
-                  value={form.name}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, name: e.target.value }))
-                  }
-                  required
-                />
+                <Input placeholder="Client name" {...form.register("name")} />
+                {form.formState.errors.name && <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label>Email</Label>
-                  <Input
-                    type="email"
-                    value={form.email}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, email: e.target.value }))
-                    }
-                  />
+                  <Input type="email" {...form.register("email")} />
                 </div>
                 <div className="space-y-1.5">
                   <Label>Phone</Label>
-                  <Input
-                    value={form.phone}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, phone: e.target.value }))
-                    }
-                  />
+                  <Input {...form.register("phone")} />
                 </div>
               </div>
               <div className="space-y-1.5">
                 <Label>Company</Label>
-                <Input
-                  value={form.company}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, company: e.target.value }))
-                  }
-                />
+                <Input {...form.register("company")} />
               </div>
               <div className="space-y-1.5">
                 <Label>Notes</Label>
-                <Input
-                  value={form.notes}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, notes: e.target.value }))
-                  }
-                />
+                <Input {...form.register("notes")} />
               </div>
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full" disabled={addClient.isPending || updateClient.isPending}>
                 {editingId ? "Update Client" : "Add Client"}
               </Button>
             </form>
@@ -244,37 +147,16 @@ export default function ClientsPage() {
         </Dialog>
       </div>
 
-      {loading ? (
-        <PageLoader />
-      ) : clients.length === 0 ? (
-        <Card>
-          <CardContent className="p-12 text-center text-muted-foreground text-sm">
-            No clients yet. Add your first client above.
-          </CardContent>
-        </Card>
+      {!clients || clients.length === 0 ? (
+        <EmptyState icon={UserPlus} title="No clients yet" description="Add your first client to start tracking relationships." actionLabel="Add Client" onAction={openAdd} />
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {clients.map((c) => (
-            <Card
-              key={c.id}
-              className="hover:shadow-md transition-shadow relative group"
-            >
+            <Card key={c.id} className="hover:shadow-md transition-shadow relative group">
               <CardContent className="p-5">
                 <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleEdit(c)}
-                  >
-                    <Pencil className="w-3.5 h-3.5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setDeleteId(c.id)}
-                  >
-                    <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                  </Button>
+                  <Button variant="ghost" size="sm" aria-label="Edit client" onClick={() => openEdit(c)}><Pencil className="w-3.5 h-3.5" /></Button>
+                  <Button variant="ghost" size="sm" aria-label="Delete client" onClick={() => setDeleteId(c.id)}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
                 </div>
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -282,11 +164,7 @@ export default function ClientsPage() {
                   </div>
                   <div>
                     <p className="font-medium text-sm">{c.name}</p>
-                    {c.company && (
-                      <p className="text-xs text-muted-foreground">
-                        {c.company}
-                      </p>
-                    )}
+                    {c.company && <p className="text-xs text-muted-foreground">{c.company}</p>}
                   </div>
                 </div>
                 <div className="space-y-1.5">
@@ -307,26 +185,17 @@ export default function ClientsPage() {
         </div>
       )}
 
-      <AlertDialog
-        open={!!deleteId}
-        onOpenChange={(open) => !open && setDeleteId(null)}
-      >
+      <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Client</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this client? This will also remove
-              them from any associated income, projects, and invoices.
+              Are you sure you want to delete this client? This will also remove them from any associated income, projects, and invoices.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

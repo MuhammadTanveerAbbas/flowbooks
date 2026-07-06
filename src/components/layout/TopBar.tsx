@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
-import { LogOut, Settings, CreditCard } from "lucide-react";
+import { useAuth } from "@/hooks/auth-context";
+import { LogOut, Settings } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -54,16 +54,13 @@ export function TopBar() {
       </div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="w-8 h-8 rounded-full bg-primary/10 text-primary font-medium text-sm flex items-center justify-center hover:bg-primary/20 transition-colors">
+          <button aria-label="User menu" className="w-8 h-8 rounded-full bg-primary/10 text-primary font-medium text-sm flex items-center justify-center hover:bg-primary/20 transition-colors">
             {initial}
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuItem onClick={() => navigate("/settings")}>
             <Settings className="w-4 h-4 mr-2" /> Settings
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigate("/settings")}>
-            <CreditCard className="w-4 h-4 mr-2" /> Billing
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem

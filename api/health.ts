@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { createServerSupabaseClient, sendJson } from "./_shared";
+import { createServerSupabaseClient, requireBearer, sendJson } from "./_shared";
 
 export default async function handler(
   request: IncomingMessage,
@@ -7,6 +7,11 @@ export default async function handler(
 ) {
   if (request.method !== "GET") {
     sendJson(response, 405, { error: "Method not allowed" });
+    return;
+  }
+
+  if (!requireBearer(request, process.env.CRON_SECRET)) {
+    sendJson(response, 401, { error: "Unauthorized" });
     return;
   }
 

@@ -34,7 +34,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth-context";
 import { useEffect } from "react";
 
 const fadeUp = {
@@ -58,11 +58,11 @@ const incomeData = [
 
 // Expense breakdown data
 const expenseData = [
-  { name: "Software & Tools", value: 320, color: "#3b82f6" },
-  { name: "Equipment", value: 450, color: "#8b5cf6" },
-  { name: "Office Supplies", value: 180, color: "#ec4899" },
-  { name: "Professional Services", value: 290, color: "#f59e0b" },
-  { name: "Other", value: 160, color: "#10b981" },
+  { name: "Software & Tools", value: 320, color: "hsl(var(--primary))" },
+  { name: "Equipment", value: 450, color: "hsl(var(--info))" },
+  { name: "Office Supplies", value: 180, color: "hsl(var(--warning))" },
+  { name: "Professional Services", value: 290, color: "hsl(var(--success))" },
+  { name: "Other", value: 160, color: "hsl(var(--muted-foreground))" },
 ];
 
 // Monthly comparison data
@@ -84,7 +84,7 @@ const features = [
   {
     icon: Receipt,
     title: "Smart Expenses",
-    desc: "Categorize spending, upload receipts, and spot tax deductions automatically.",
+    desc: "Categorize spending and keep records organized for tax season.",
   },
   {
     icon: Users,
@@ -99,7 +99,7 @@ const features = [
   {
     icon: Zap,
     title: "One-Click Invoices",
-    desc: "Build professional invoices, send them, and mark paid  synced to your income.",
+    desc: "Build professional invoices and mark them paid — synced to your income.",
   },
   {
     icon: Globe,
@@ -194,17 +194,13 @@ const comparisonRows: {
   },
   {
     feature: "Price",
-    flowbooks: "Free to start",
+    flowbooks: "Free",
     spreadsheets: "Free",
     quickbooks: "$30+/mo",
   },
 ];
 
 const faqs = [
-  {
-    q: "Is FlowBooks free to use?",
-    a: "Yes  FlowBooks is free to start. Sign up, run the onboarding wizard, and start tracking income and expenses immediately with no credit card required.",
-  },
   {
     q: "Does FlowBooks replace my accountant?",
     a: "FlowBooks complements your accountant by keeping your records organized. We don't file taxes for you, but we make tax season painless.",
@@ -219,7 +215,7 @@ const faqs = [
   },
   {
     q: "Can I export my data?",
-    a: "CSV export is on the roadmap. In the meantime, all your data lives in your own Supabase project and can be accessed directly.",
+    a: "Yes. Export income, expenses, and invoices to CSV from each page in the app.",
   },
 ];
 
@@ -248,7 +244,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-background">
       {/* Nav */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-3">
+        <div className="max-w-6xl mx-auto flex items-center justify-between px-4 sm:px-6 py-3">
           <div className="flex items-center gap-2">
             <FlowBooksLogo size={32} />
             <span className="font-serif font-semibold text-lg">FlowBooks</span>
@@ -330,7 +326,7 @@ export default function LandingPage() {
           </svg>
         </div>
 
-        <div className="max-w-7xl mx-auto px-6 pt-20 pb-28 md:pt-28 md:pb-36">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-16 pb-20 md:pt-28 md:pb-36">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Left: Text content */}
             <motion.div
@@ -350,13 +346,13 @@ export default function LandingPage() {
               <motion.h1
                 variants={fadeUp}
                 custom={1}
-                className="font-serif text-5xl md:text-6xl lg:text-[4.5rem] font-bold tracking-tight leading-[1.08]"
+                className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-[4.5rem] font-bold tracking-tight leading-[1.08]"
               >
                 Freelance finances,
                 <span className="block mt-1">
                   <span className="relative inline-block bg-gradient-to-r from-primary via-emerald-400 to-teal-500 bg-clip-text text-transparent">
                     made simpler.
-                    {/* Wavy underline â€” inline so it matches text width */}
+                    {/* Wavy underline — inline so it matches text width */}
                     <motion.svg
                       initial={{ pathLength: 0, opacity: 0 }}
                       animate={{ pathLength: 1, opacity: 1 }}
@@ -415,7 +411,7 @@ export default function LandingPage() {
                 custom={2}
                 className="text-lg md:text-xl text-muted-foreground max-w-lg mx-auto lg:mx-0 leading-relaxed"
               >
-                Track irregular income, estimate taxes, send invoices, and
+                Track irregular income, estimate taxes, create invoices, and
                 actually understand where your money goes all in one calm,
                 focused tool.
               </motion.p>
@@ -441,7 +437,7 @@ export default function LandingPage() {
                       className="h-13 px-8 text-base rounded-xl shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-200"
                       onClick={() => navigate("/signup")}
                     >
-                      Start for free <ArrowRight className="w-4 h-4 ml-2" />
+                      Get started <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                     <Button
                       size="lg"
@@ -455,31 +451,8 @@ export default function LandingPage() {
                 )}
               </motion.div>
 
-              {/* Trust badges */}
-              <motion.div
-                variants={fadeUp}
-                custom={4}
-                className="flex flex-wrap items-center justify-center lg:justify-start gap-5 pt-1"
-              >
-                {[
-                  { text: "No credit card" },
-                  { text: "Free to start" },
-                  { text: "5 min setup" },
-                ].map((item, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-1.5 text-sm text-muted-foreground"
-                  >
-                    <div className="w-4 h-4 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
-                      <Check
-                        className="w-2.5 h-2.5 text-primary"
-                        strokeWidth={3}
-                      />
-                    </div>
-                    <span>{item.text}</span>
-                  </div>
-                ))}
-              </motion.div>
+              {/* Spacer to maintain layout */}
+              <motion.div variants={fadeUp} custom={4} className="pt-1" />
             </motion.div>
 
             {/* Right: Dashboard preview */}
@@ -505,21 +478,18 @@ export default function LandingPage() {
                     <span className="text-sm font-semibold">FlowBooks</span>
                   </div>
                   <span className="text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-full">
-                    June 2025
+                    Example preview
                   </span>
                 </div>
 
                 {/* Summary row */}
                 <div className="px-6 py-5">
                   <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">
-                    Net Profit
+                    Net Profit <span className="normal-case tracking-normal">(sample)</span>
                   </p>
                   <div className="flex items-end gap-3">
                     <span className="text-4xl font-bold font-serif tracking-tight">
-                      $8,450
-                    </span>
-                    <span className="mb-1 text-sm font-semibold text-emerald-500 flex items-center gap-1">
-                      <TrendingUp className="w-3.5 h-3.5" /> +23%
+                      $4,250
                     </span>
                   </div>
                 </div>
@@ -627,7 +597,7 @@ export default function LandingPage() {
                     Invoice sent
                   </p>
                   <p className="text-[11px] text-muted-foreground">
-                    Acme Corp Â· $2,400
+                    Acme Corp · $2,400
                   </p>
                 </div>
               </motion.div>
@@ -676,7 +646,7 @@ export default function LandingPage() {
               Built for freelancer workflows
             </h2>
             <p className="text-muted-foreground mt-3 max-w-md mx-auto">
-              Every feature designed around how freelancers actually work â€”
+              Every feature designed around how freelancers actually work —
               not adapted from enterprise software.
             </p>
           </div>
@@ -911,39 +881,28 @@ export default function LandingPage() {
               viewport={{ once: true }}
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium border border-primary/30 bg-primary/5 text-primary mb-4"
             >
-              <TrendingUp className="w-3.5 h-3.5" /> Live insights
+              <TrendingUp className="w-3.5 h-3.5" /> Sample dashboard
             </motion.span>
             <h2 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">
               Your finances, at a glance
             </h2>
             <p className="text-muted-foreground mt-3 max-w-xl mx-auto">
-              Beautiful charts that update in real time â€” income trends,
-              expense breakdowns, and profit margins all in one dashboard.
+              Illustrative charts showing the kind of view you get once your
+              income and expenses are tracked in FlowBooks.
             </p>
           </div>
+
+          <p className="text-xs text-center text-muted-foreground mb-6">
+            Sample data below — your dashboard reflects your own records.
+          </p>
 
           {/* Stat pills */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
             {[
-              {
-                label: "Monthly Income",
-                value: "$6,100",
-                change: "+23%",
-                up: true,
-              },
-              { label: "Expenses", value: "$1,600", change: "-8%", up: false },
-              {
-                label: "Net Profit",
-                value: "$4,500",
-                change: "+31%",
-                up: true,
-              },
-              {
-                label: "Profit Margin",
-                value: "73.8%",
-                change: "+4pts",
-                up: true,
-              },
+              { label: "Monthly Income", value: "$6,100" },
+              { label: "Expenses", value: "$1,600" },
+              { label: "Net Profit", value: "$4,500" },
+              { label: "Profit Margin", value: "73.8%" },
             ].map((stat, i) => (
               <motion.div
                 key={stat.label}
@@ -959,11 +918,6 @@ export default function LandingPage() {
                       {stat.label}
                     </p>
                     <p className="text-xl font-bold font-serif">{stat.value}</p>
-                    <p
-                      className={`text-xs font-semibold mt-1 ${stat.up ? "text-emerald-500" : "text-red-500"}`}
-                    >
-                      {stat.change} vs last month
-                    </p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -1033,7 +987,7 @@ export default function LandingPage() {
                         />
                         <Bar
                           dataKey="expenses"
-                          fill="#f87171"
+                          fill="hsl(var(--destructive))"
                           name="Expenses"
                           radius={[4, 4, 0, 0]}
                         />
@@ -1061,8 +1015,8 @@ export default function LandingPage() {
                       By category this month
                     </p>
                   </div>
-                  <div className="flex-1 flex items-center gap-6">
-                    <div className="h-48 w-48 flex-shrink-0">
+                  <div className="flex-1 flex flex-col sm:flex-row items-center gap-6">
+                    <div className="h-48 w-48 flex-shrink-0 mx-auto sm:mx-0">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie
@@ -1182,7 +1136,7 @@ export default function LandingPage() {
               Ready to take control?
             </h2>
             <p className="text-muted-foreground text-lg mb-8">
-              Free to start. No credit card. Set up in 5 minutes.
+              Set up in minutes and start tracking your freelance finances.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               {!loading && user ? (
@@ -1200,7 +1154,7 @@ export default function LandingPage() {
                     className="h-12 px-8 text-base rounded-xl shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-200"
                     onClick={() => navigate("/signup")}
                   >
-                    Create free account <ArrowRight className="w-4 h-4 ml-2" />
+                    Get started <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                   <Button
                     size="lg"
@@ -1213,22 +1167,7 @@ export default function LandingPage() {
                 </>
               )}
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-5 mt-6">
-              {["No credit card", "Free to start", "5 min setup"].map((t) => (
-                <div
-                  key={t}
-                  className="flex items-center gap-1.5 text-sm text-muted-foreground"
-                >
-                  <div className="w-4 h-4 rounded-full bg-primary/15 flex items-center justify-center">
-                    <Check
-                      className="w-2.5 h-2.5 text-primary"
-                      strokeWidth={3}
-                    />
-                  </div>
-                  {t}
-                </div>
-              ))}
-            </div>
+
           </motion.div>
         </div>
       </section>
@@ -1236,7 +1175,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-border bg-muted/20">
         <div className="max-w-6xl mx-auto px-6 pt-14 pb-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 mb-12">
             {/* Brand */}
             <div className="col-span-2 md:col-span-1 space-y-4">
               <div className="flex items-center gap-2">
@@ -1317,6 +1256,29 @@ export default function LandingPage() {
                   { label: "Settings", href: "/settings" },
                   { label: "Sign up", href: "/signup" },
                   { label: "Sign in", href: "/login" },
+                ].map(({ label, href }) => (
+                  <li key={label}>
+                    <button
+                      onClick={() => navigate(href)}
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Legal */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                Legal
+              </h4>
+              <ul className="space-y-2.5">
+                {[
+                  { label: "Privacy Policy", href: "/privacy" },
+                  { label: "Terms of Service", href: "/terms" },
+                  { label: "Refund Policy", href: "/refund" },
                 ].map(({ label, href }) => (
                   <li key={label}>
                     <button

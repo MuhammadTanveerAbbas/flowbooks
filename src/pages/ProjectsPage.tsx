@@ -1,7 +1,9 @@
-import { useEffect, useState, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth-context";
+import { useProjects, useClientOptions } from "@/hooks/use-queries";
+import { useAddProject, useUpdateProject, useDeleteProject } from "@/hooks/use-mutations";
 import { PageLoader } from "@/components/PageLoader";
+import { EmptyState } from "@/components/EmptyState";
+import { ErrorCard } from "@/components/ErrorCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,275 +32,157 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, FolderKanban, Pencil, Trash2 } from "lucide-react";
+import { Plus, FolderKanban, Pencil, Trash2, FolderPlus } from "lucide-react";
 import { toast } from "sonner";
-import { firstSchemaError, projectSchema } from "@/lib/schemas";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { projectSchema } from "@/lib/schemas";
+import type { z } from "zod";
+import type { ProjectEntry } from "@/types";
+import { useState } from "react";
 
-interface Project {
-  id: string;
-  name: string;
-  description: string | null;
-  status: string;
-  budget: number;
-  client_id: string | null;
-  clients?: { name: string } | null;
+function projectClientName(project: ProjectEntry): string | null {
+  return project.clients?.name ?? null;
 }
 
-interface Client {
-  id: string;
-  name: string;
-}
+type ProjectForm = z.infer<typeof projectSchema>;
 
 export default function ProjectsPage() {
   const { user } = useAuth();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [clients, setClients] = useState<Client[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: projects, isLoading, error } = useProjects(user?.id);
+  const { data: clients } = useClientOptions(user?.id);
+  const addProject = useAddProject(user?.id);
+  const updateProject = useUpdateProject(user?.id);
+  const deleteProject = useDeleteProject(user?.id);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [form, setForm] = useState({
-    name: "",
-    description: "",
-    status: "active",
-    budget: "",
-    client_id: "",
+
+  const form = useForm<ProjectForm>({
+    resolver: zodResolver(projectSchema),
+    defaultValues: { name: "", description: null, status: "active", budget: 0, client_id: null },
   });
 
-  const fetchData = useCallback(async () => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-    const [pRes, cRes] = await Promise.all([
-      supabase
-        .from("projects")
-        .select("*, clients(name)")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false }),
-      supabase.from("clients").select("id, name").eq("user_id", user.id),
-    ]);
-    if (pRes.data) setProjects(pRes.data as Project[]);
-    if (cRes.data) setClients(cRes.data);
-    setLoading(false);
-  }, [user]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  const handleAdd = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-
-    const parsed = projectSchema.safeParse({
-      ...form,
-      budget: form.budget === "" ? 0 : form.budget,
-    });
-    if (!parsed.success) {
-      toast.error(firstSchemaError(parsed.error));
-      return;
-    }
-    const values = parsed.data;
-
-    if (editingId) {
-      const { error } = await supabase
-        .from("projects")
-        .update({
-          name: values.name,
-          description: values.description,
-          status: values.status,
-          budget: values.budget,
-          client_id: values.client_id,
-        })
-        .eq("id", editingId)
-        .eq("user_id", user.id);
-
-      if (error) {
-        toast.error(error.message);
-        return;
-      }
-      toast.success("Project updated");
-    } else {
-      const { error } = await supabase.from("projects").insert({
-        user_id: user.id,
-        name: values.name,
-        description: values.description,
-        status: values.status,
-        budget: values.budget,
-        client_id: values.client_id,
-      });
-
-      if (error) {
-        toast.error(error.message);
-        return;
-      }
-      toast.success("Project added");
-    }
-
-    setOpen(false);
+  const openAdd = () => {
     setEditingId(null);
-    setForm({
-      name: "",
-      description: "",
-      status: "active",
-      budget: "",
-      client_id: "",
-    });
-    fetchData();
+    form.reset({ name: "", description: null, status: "active", budget: 0, client_id: null });
+    setOpen(true);
   };
 
-  const handleEdit = (project: Project) => {
+  const openEdit = (project: NonNullable<typeof projects>[number]) => {
     setEditingId(project.id);
-    setForm({
+    form.reset({
       name: project.name,
-      description: project.description || "",
-      status: project.status,
-      budget:
-        project.budget != null && project.budget > 0
-          ? String(project.budget)
-          : "",
-      client_id: project.client_id || "",
+      description: project.description ?? null,
+      status: project.status as ProjectForm["status"],
+      budget: Number(project.budget) || 0,
+      client_id: project.client_id ?? null,
     });
     setOpen(true);
   };
 
-  const handleDelete = async () => {
-    if (!deleteId) return;
-
+  const handleSubmit = async (values: ProjectForm) => {
     if (!user) return;
-
-    const { error } = await supabase
-      .from("projects")
-      .delete()
-      .eq("id", deleteId)
-      .eq("user_id", user.id);
-
-    if (error) {
-      toast.error(error.message);
-      return;
+    try {
+      if (editingId) {
+        await updateProject.mutateAsync({ id: editingId, ...values });
+        toast.success("Project updated");
+      } else {
+        await addProject.mutateAsync(values);
+        toast.success("Project added");
+      }
+      setOpen(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Operation failed");
     }
-
-    toast.success("Project deleted");
-    setDeleteId(null);
-    fetchData();
   };
 
-  const handleDialogClose = (isOpen: boolean) => {
-    setOpen(isOpen);
-    if (!isOpen) {
-      setEditingId(null);
-      setForm({
-        name: "",
-        description: "",
-        status: "active",
-        budget: "",
-        client_id: "",
-      });
+  const handleDelete = async () => {
+    if (!deleteId || !user) return;
+    try {
+      await deleteProject.mutateAsync(deleteId);
+      toast.success("Project deleted");
+      setDeleteId(null);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Delete failed");
     }
   };
 
   const statusColor = (s: string) =>
-    s === "active"
-      ? "bg-success/10 text-success"
-      : s === "completed"
-        ? "bg-primary/10 text-primary"
-        : "bg-muted text-muted-foreground";
+    s === "active" ? "bg-success/10 text-success" : s === "completed" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground";
+
+  if (isLoading) return <PageLoader />;
+  if (error) {
+    return <ErrorCard title="Failed to load projects" message="Please try refreshing the page." />;
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl md:text-3xl font-serif font-semibold tracking-tight">
-            Projects
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            Track projects, budgets, and deliverables.
-          </p>
+          <h1 className="text-2xl md:text-3xl font-serif font-semibold tracking-tight">Projects</h1>
+          <p className="text-muted-foreground text-sm">Track projects, budgets, and deliverables.</p>
         </div>
-        <Dialog open={open} onOpenChange={handleDialogClose}>
+        <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditingId(null); }}>
           <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-1" /> Add Project
-            </Button>
+            <Button onClick={openAdd}><Plus className="w-4 h-4 mr-1" /> Add Project</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>
-                {editingId ? "Edit Project" : "Add Project"}
-              </DialogTitle>
+              <DialogTitle>{editingId ? "Edit Project" : "Add Project"}</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleAdd} className="space-y-4">
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
               <div className="space-y-1.5">
                 <Label>Project Name *</Label>
-                <Input
-                  value={form.name}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, name: e.target.value }))
-                  }
-                  required
-                />
+                <Input placeholder="Project name" {...form.register("name")} />
+                {form.formState.errors.name && <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>}
               </div>
               <div className="space-y-1.5">
                 <Label>Description</Label>
-                <Input
-                  value={form.description}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, description: e.target.value }))
-                  }
-                />
+                <Input {...form.register("description")} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label>Budget</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={form.budget}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, budget: e.target.value }))
-                    }
-                  />
+                  <Input type="number" step="0.01" min="0" {...form.register("budget")} />
+                  {form.formState.errors.budget && <p className="text-sm text-destructive">{form.formState.errors.budget.message}</p>}
                 </div>
                 <div className="space-y-1.5">
                   <Label>Status</Label>
-                  <Select
-                    value={form.status}
-                    onValueChange={(v) => setForm((f) => ({ ...f, status: v }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="paused">Paused</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Controller
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                          <SelectItem value="paused">Paused</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                 </div>
               </div>
               <div className="space-y-1.5">
                 <Label>Client</Label>
-                <Select
-                  value={form.client_id}
-                  onValueChange={(v) =>
-                    setForm((f) => ({ ...f, client_id: v }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Optional" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {clients.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Controller
+                  control={form.control}
+                  name="client_id"
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                      <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
+                      <SelectContent>
+                        {(clients ?? []).map((c) => (
+                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full" disabled={addProject.isPending || updateProject.isPending}>
                 {editingId ? "Update Project" : "Add Project"}
               </Button>
             </form>
@@ -306,90 +190,48 @@ export default function ProjectsPage() {
         </Dialog>
       </div>
 
-      {loading ? (
-        <PageLoader />
-      ) : projects.length === 0 ? (
-        <Card>
-          <CardContent className="p-12 text-center text-muted-foreground text-sm">
-            No projects yet. Add your first project above.
-          </CardContent>
-        </Card>
+      {!projects || projects.length === 0 ? (
+        <EmptyState icon={FolderPlus} title="No projects yet" description="Add your first project to start tracking work." actionLabel="Add Project" onAction={openAdd} />
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {projects.map((p) => (
-            <Card
-              key={p.id}
-              className="hover:shadow-md transition-shadow relative group"
-            >
+            <Card key={p.id} className="hover:shadow-md transition-shadow relative group">
               <CardContent className="p-5">
                 <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleEdit(p)}
-                  >
-                    <Pencil className="w-3.5 h-3.5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setDeleteId(p.id)}
-                  >
-                    <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                  </Button>
+                  <Button variant="ghost" size="sm" aria-label="Edit project" onClick={() => openEdit(p)}><Pencil className="w-3.5 h-3.5" /></Button>
+                  <Button variant="ghost" size="sm" aria-label="Delete project" onClick={() => setDeleteId(p.id)}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
                 </div>
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <FolderKanban className="w-4 h-4 text-primary" />
                     <p className="font-medium text-sm">{p.name}</p>
                   </div>
-                  <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(p.status)}`}
-                  >
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(p.status)}`}>
                     {p.status}
                   </span>
                 </div>
-                {p.clients?.name && (
-                  <p className="text-xs text-muted-foreground mb-1">
-                    Client: {p.clients.name}
-                  </p>
+                {projectClientName(p as ProjectEntry) && (
+                  <p className="text-xs text-muted-foreground mb-1">Client: {projectClientName(p as ProjectEntry)}</p>
                 )}
-                {p.budget != null && p.budget > 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    Budget: ${Number(p.budget).toLocaleString()}
-                  </p>
+                {p.budget != null && Number(p.budget) > 0 && (
+                  <p className="text-xs text-muted-foreground">Budget: ${Number(p.budget).toLocaleString()}</p>
                 )}
-                {p.description && (
-                  <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
-                    {p.description}
-                  </p>
-                )}
+                {p.description && <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{p.description}</p>}
               </CardContent>
             </Card>
           ))}
         </div>
       )}
 
-      <AlertDialog
-        open={!!deleteId}
-        onOpenChange={(open) => !open && setDeleteId(null)}
-      >
+      <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Project</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this project? This will also
-              remove it from any associated income and invoices.
-            </AlertDialogDescription>
+            <AlertDialogDescription>Are you sure you want to delete this project? This will also remove it from any associated income and invoices.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -27,6 +27,7 @@ export default defineConfig({
             "@radix-ui/react-select",
           ],
           "chart-vendor": ["recharts"],
+          "motion-vendor": ["framer-motion"],
           "form-vendor": ["react-hook-form", "@hookform/resolvers", "zod"],
         },
       },

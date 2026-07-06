@@ -1,30 +1,7 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from "react";
-import { Session, User } from "@supabase/supabase-js";
+import { useEffect, useState, type ReactNode } from "react";
+import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-
-interface AuthContextType {
-  session: Session | null;
-  user: User | null;
-  loading: boolean;
-  onboardingComplete: boolean | null;
-  refreshProfile: () => Promise<boolean>;
-  signOut: () => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextType>({
-  session: null,
-  user: null,
-  loading: true,
-  onboardingComplete: null,
-  refreshProfile: async () => false,
-  signOut: async () => {},
-});
+import { AuthContext } from "@/hooks/auth-context";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -45,12 +22,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (import.meta.env.DEV) {
           console.error("Error fetching profile:", error);
         }
-        // Treat fetch failure as onboarding not complete so user can set up profile
         setOnboardingComplete(false);
         return false;
       }
 
-      // If no profile row yet (trigger may not have fired), treat as incomplete
       const complete = data?.onboarding_complete ?? false;
       setOnboardingComplete(complete);
       return complete;
@@ -171,5 +146,3 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     </AuthContext.Provider>
   );
 }
-
-export const useAuth = () => useContext(AuthContext);

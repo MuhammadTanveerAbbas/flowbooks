@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/auth-context";
+import { useUpsertProfile } from "@/hooks/use-mutations";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,118 +14,77 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { firstSchemaError, profileSchema } from "@/lib/schemas";
+import { PageLoader } from "@/components/PageLoader";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { profileSchema } from "@/lib/schemas";
+import type { z } from "zod";
+import { useEffect } from "react";
+
+type ProfileForm = z.infer<typeof profileSchema>;
 
 export default function SettingsPage() {
   const { user, signOut } = useAuth();
-  const [profile, setProfile] = useState({
-    full_name: "",
-    country: "US",
-    tax_status: "self_employed",
-    monthly_income_goal: "0",
-    tax_saving_percent: "25",
-    currency: "USD",
+  const upsertProfile = useUpsertProfile(user?.id);
+
+  const { data: profile, isLoading } = useQuery({
+    queryKey: [user?.id, "profile"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user!.id)
+        .maybeSingle();
+      if (error && error.code !== "PGRST116") throw error;
+      return data ?? null;
+    },
+    enabled: !!user,
   });
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    control,
+    formState: { errors },
+  } = useForm<ProfileForm>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      full_name: "",
+      country: "US",
+      tax_status: "self_employed",
+      monthly_income_goal: 0,
+      tax_saving_percent: 25,
+      currency: "USD",
+    },
+  });
 
   useEffect(() => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-    supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .maybeSingle()
-      .then(({ data, error }) => {
-        if (error && error.code !== "PGRST116") {
-          if (import.meta.env.DEV) {
-            console.error("Error fetching profile:", error);
-          }
-          toast.error("Failed to load profile");
-        }
-
-        if (data) {
-          setProfile({
-            full_name: data.full_name || "",
-            country: data.country || "US",
-            tax_status: data.tax_status || "self_employed",
-            monthly_income_goal: String(data.monthly_income_goal || 0),
-            tax_saving_percent: String(data.tax_saving_percent || 25),
-            currency: data.currency || "USD",
-          });
-        }
-        setLoading(false);
+    if (profile) {
+      reset({
+        full_name: profile.full_name ?? "",
+        country: profile.country ?? "US",
+        tax_status: profile.tax_status ?? "self_employed",
+        monthly_income_goal: Number(profile.monthly_income_goal) || 0,
+        tax_saving_percent: Number(profile.tax_saving_percent) || 25,
+        currency: profile.currency ?? "USD",
       });
-  }, [user]);
+    }
+  }, [profile, reset]);
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = async (data: ProfileForm) => {
     if (!user) return;
-
-    const parsed = profileSchema.safeParse(profile);
-    if (!parsed.success) {
-      toast.error(firstSchemaError(parsed.error));
-      return;
+    try {
+      await upsertProfile.mutateAsync(data);
+      toast.success("Settings saved");
+    } catch {
+      toast.error("Failed to save settings");
     }
-    const values = parsed.data;
-
-    setSaving(true);
-
-    // Try to update first
-    const { data: updateData, error: updateError } = await supabase
-      .from("profiles")
-      .update({
-        full_name: values.full_name,
-        country: values.country,
-        tax_status: values.tax_status,
-        monthly_income_goal: values.monthly_income_goal,
-        tax_saving_percent: values.tax_saving_percent,
-        currency: values.currency,
-      })
-      .eq("id", user.id)
-      .select();
-
-    if (updateError) {
-      setSaving(false);
-      toast.error(updateError.message);
-      return;
-    }
-
-    // If no rows updated, create the profile
-    if (!updateData || updateData.length === 0) {
-      const { error: insertError } = await supabase.from("profiles").insert({
-        id: user.id,
-        full_name: values.full_name,
-        country: values.country,
-        tax_status: values.tax_status,
-        monthly_income_goal: values.monthly_income_goal,
-        tax_saving_percent: values.tax_saving_percent,
-        currency: values.currency,
-        onboarding_complete: true,
-      });
-
-      setSaving(false);
-      if (insertError) {
-        toast.error(insertError.message);
-      } else {
-        toast.success("Profile created successfully");
-      }
-      return;
-    }
-
-    setSaving(false);
-    toast.success("Settings saved");
   };
 
-  if (loading)
-    return (
-      <div className="p-8 text-center text-muted-foreground text-sm">
-        Loading…
-      </div>
-    );
+  if (isLoading) {
+    return <PageLoader />;
+  }
 
   return (
     <div className="space-y-6">
@@ -133,123 +93,106 @@ export default function SettingsPage() {
           Settings
         </h1>
         <p className="text-muted-foreground text-sm">
-          Manage your profile, preferences, and billing.
+          Manage your profile and preferences.
         </p>
       </div>
 
       <Card>
         <CardContent className="p-6">
           <h2 className="font-serif font-semibold text-base mb-4">Profile</h2>
-          <form onSubmit={handleSave} className="space-y-4 max-w-lg">
-            <div className="space-y-1.5">
-              <Label>Full Name</Label>
-              <Input
-                value={profile.full_name}
-                onChange={(e) =>
-                  setProfile((p) => ({ ...p, full_name: e.target.value }))
-                }
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Email</Label>
-              <Input value={user?.email || ""} disabled className="bg-muted" />
+          <form onSubmit={handleSubmit(handleSave)} className="space-y-4 max-w-lg">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Full Name</Label>
+                <Input {...register("full_name")} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Email</Label>
+                <Input value={user?.email || ""} disabled className="bg-muted" />
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Country</Label>
-                <Select
-                  value={profile.country}
-                  onValueChange={(v) =>
-                    setProfile((p) => ({ ...p, country: v }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="US">United States</SelectItem>
-                    <SelectItem value="UK">United Kingdom</SelectItem>
-                    <SelectItem value="CA">Canada</SelectItem>
-                    <SelectItem value="AU">Australia</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Controller
+                  control={control}
+                  name="country"
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="US">United States</SelectItem>
+                        <SelectItem value="UK">United Kingdom</SelectItem>
+                        <SelectItem value="CA">Canada</SelectItem>
+                        <SelectItem value="AU">Australia</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>Currency</Label>
-                <Select
-                  value={profile.currency}
-                  onValueChange={(v) =>
-                    setProfile((p) => ({ ...p, currency: v }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="USD">USD ($)</SelectItem>
-                    <SelectItem value="GBP">GBP (£)</SelectItem>
-                    <SelectItem value="EUR">EUR (€)</SelectItem>
-                    <SelectItem value="CAD">CAD ($)</SelectItem>
-                    <SelectItem value="AUD">AUD ($)</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Controller
+                  control={control}
+                  name="currency"
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USD">USD ($)</SelectItem>
+                        <SelectItem value="GBP">GBP (�)</SelectItem>
+                        <SelectItem value="EUR">EUR (�)</SelectItem>
+                        <SelectItem value="CAD">CAD ($)</SelectItem>
+                        <SelectItem value="AUD">AUD ($)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Monthly Income Goal</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="100"
-                  value={profile.monthly_income_goal}
-                  onChange={(e) =>
-                    setProfile((p) => ({
-                      ...p,
-                      monthly_income_goal: e.target.value,
-                    }))
-                  }
-                />
+                <Input type="number" min="0" step="100" placeholder="5000" {...register("monthly_income_goal")} />
+                {errors.monthly_income_goal && (
+                  <p className="text-sm text-destructive">{errors.monthly_income_goal.message}</p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label>Tax Saving %</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="1"
-                  value={profile.tax_saving_percent}
-                  onChange={(e) =>
-                    setProfile((p) => ({
-                      ...p,
-                      tax_saving_percent: e.target.value,
-                    }))
-                  }
-                />
+                <Input type="number" min="0" max="100" step="1" {...register("tax_saving_percent")} />
+                {errors.tax_saving_percent && (
+                  <p className="text-sm text-destructive">{errors.tax_saving_percent.message}</p>
+                )}
               </div>
             </div>
             <div className="space-y-1.5">
               <Label>Tax Status</Label>
-              <Select
-                value={profile.tax_status}
-                onValueChange={(v) =>
-                  setProfile((p) => ({ ...p, tax_status: v }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="self_employed">Self-Employed</SelectItem>
-                  <SelectItem value="sole_trader">Sole Trader</SelectItem>
-                  <SelectItem value="llc">LLC</SelectItem>
-                  <SelectItem value="ltd">Ltd Company</SelectItem>
-                </SelectContent>
-              </Select>
+              <Controller
+                control={control}
+                name="tax_status"
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="self_employed">Self-Employed</SelectItem>
+                      <SelectItem value="sole_trader">Sole Trader</SelectItem>
+                      <SelectItem value="llc">LLC</SelectItem>
+                      <SelectItem value="ltd">Ltd Company</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
-            <Button type="submit" disabled={saving}>
-              {saving ? "Saving…" : "Save Settings"}
+            <Button type="submit" disabled={upsertProfile.isPending}>
+              {upsertProfile.isPending ? "Saving\u2026" : "Save Settings"}
             </Button>
           </form>
         </CardContent>

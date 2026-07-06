@@ -99,7 +99,8 @@ CREATE TABLE IF NOT EXISTS public.projects (
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   CONSTRAINT projects_status_check CHECK (status IN ('active', 'completed', 'paused')),
-  CONSTRAINT projects_budget_nonnegative CHECK (budget >= 0)
+  CONSTRAINT projects_budget_nonnegative CHECK (budget >= 0),
+  CONSTRAINT projects_currency_check CHECK (currency IN ('USD', 'GBP', 'EUR', 'CAD', 'AUD'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_projects_user_id   ON public.projects(user_id);
@@ -164,6 +165,7 @@ CREATE TABLE IF NOT EXISTS public.invoices (
   updated_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
   CONSTRAINT invoices_status_check CHECK (status IN ('draft', 'sent', 'paid', 'overdue')),
   CONSTRAINT invoices_amount_positive CHECK (amount > 0),
+  CONSTRAINT invoices_currency_check CHECK (currency IN ('USD', 'GBP', 'EUR', 'CAD', 'AUD')),
   UNIQUE (user_id, invoice_number)
 );
 
@@ -244,7 +246,8 @@ CREATE TABLE IF NOT EXISTS public.income (
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   CONSTRAINT income_status_check CHECK (status IN ('pending', 'paid', 'overdue')),
-  CONSTRAINT income_amount_positive CHECK (amount > 0)
+  CONSTRAINT income_amount_positive CHECK (amount > 0),
+  CONSTRAINT income_currency_check CHECK (currency IN ('USD', 'GBP', 'EUR', 'CAD', 'AUD'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_income_user_id    ON public.income(user_id);
@@ -340,7 +343,9 @@ CREATE TABLE IF NOT EXISTS public.expenses (
   notes       TEXT,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
-  CONSTRAINT expenses_amount_positive CHECK (amount > 0)
+  CONSTRAINT expenses_amount_positive CHECK (amount > 0),
+  CONSTRAINT expenses_currency_check CHECK (currency IN ('USD', 'GBP', 'EUR', 'CAD', 'AUD')),
+  CONSTRAINT expenses_category_check CHECK (category IN ('software', 'hardware', 'travel', 'meals', 'office', 'marketing', 'contractor', 'education', 'insurance', 'other'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_expenses_user_id  ON public.expenses(user_id);
