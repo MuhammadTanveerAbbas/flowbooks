@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { createServerSupabaseClient, requireBearer, sendJson } from "./_shared";
+import { createServerSupabaseClient, requireBearer, sendJson } from "./_shared.js";
 
 export default async function handler(
   request: IncomingMessage,

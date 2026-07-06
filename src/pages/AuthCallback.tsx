@@ -38,6 +38,7 @@ export default function AuthCallback() {
         const params = new URLSearchParams(location.search);
         const errorParam = params.get("error");
         const errorDescription = params.get("error_description");
+        const code = params.get("code");
 
         if (errorParam) {
           if (mounted) {
@@ -48,8 +49,36 @@ export default function AuthCallback() {
           return;
         }
 
-        // Wait a bit for Supabase to process the session
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        if (code) {
+          const { data: existingSession } = await supabase.auth.getSession();
+          if (!existingSession.session) {
+            const { error: exchangeError } =
+              await supabase.auth.exchangeCodeForSession(code);
+            if (exchangeError) {
+              const { data: retrySession } = await supabase.auth.getSession();
+              if (!retrySession.session) {
+                throw exchangeError;
+              }
+            }
+          }
+        } else {
+          let sessionEstablished = false;
+          for (let attempt = 0; attempt < 20; attempt += 1) {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+              sessionEstablished = true;
+              break;
+            }
+            await new Promise((resolve) => setTimeout(resolve, 250));
+          }
+
+          if (!sessionEstablished) {
+            if (mounted) {
+              navigate("/login", { replace: true });
+            }
+            return;
+          }
+        }
 
         const {
           data: { user },
