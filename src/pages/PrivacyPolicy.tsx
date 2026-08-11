@@ -32,9 +32,9 @@ export default function PrivacyPolicy() {
 
           <h2 className="font-serif font-semibold text-foreground text-lg">3. Third-Party Services</h2>
           <ul>
-            <li><strong>Supabase</strong> — Database, authentication, and file storage.</li>
-            <li><strong>Vercel</strong> — Hosting and serverless functions.</li>
-            <li><strong>Google OAuth</strong> — Optional sign-in (if you choose Google login).</li>
+            <li><strong>Supabase</strong> - Database, authentication, and file storage.</li>
+            <li><strong>Vercel</strong> - Hosting and serverless functions.</li>
+            <li><strong>Google OAuth</strong> - Optional sign-in (if you choose Google login).</li>
           </ul>
           <p>We do not sell your data. We do not share your financial data with third parties for marketing purposes.</p>
 

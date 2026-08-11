@@ -5,6 +5,8 @@ import {
   Check,
   X,
   ArrowRight,
+  Sparkles,
+  ChevronDown,
   BarChart3,
   Receipt,
   Users,
@@ -17,6 +19,15 @@ import {
   Github,
   Twitter,
   ExternalLink,
+  Table2,
+  BookOpen,
+  UserCheck,
+  FolderKanban,
+  Wallet,
+  Clock,
+  GraduationCap,
+  BadgeDollarSign,
+  Activity,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { FlowBooksLogo } from "@/components/FlowBooksLogo";
@@ -36,6 +47,7 @@ import {
 } from "recharts";
 import { useAuth } from "@/hooks/auth-context";
 import { useEffect } from "react";
+import React from "react";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -79,7 +91,7 @@ const features = [
   {
     icon: BarChart3,
     title: "Smoothed Income",
-    desc: "See your rolling 3-month average to budget through feast-or-famine cycles.",
+    desc: "See your rolling 3 month average to budget through feast or famine cycles.",
   },
   {
     icon: Receipt,
@@ -94,16 +106,16 @@ const features = [
   {
     icon: Shield,
     title: "Tax Estimates",
-    desc: "Real-time quarterly tax projections with US & UK self-employment support.",
+    desc: "Real time quarterly tax projections with US & UK self employment support.",
   },
   {
     icon: Zap,
-    title: "One-Click Invoices",
-    desc: "Build professional invoices and mark them paid — synced to your income.",
+    title: "One Click Invoices",
+    desc: "Build professional invoices and mark them paid synced to your income.",
   },
   {
     icon: Globe,
-    title: "Multi-Currency",
+    title: "Multi Currency",
     desc: "Work with international clients? Set manual exchange rates per transaction.",
   },
 ];
@@ -134,69 +146,84 @@ type CellValue = boolean | string;
 
 const comparisonRows: {
   feature: string;
+  icon: React.ElementType;
   flowbooks: CellValue;
   spreadsheets: CellValue;
   quickbooks: CellValue;
 }[] = [
   {
     feature: "Freelancer-focused design",
+    icon: UserCheck,
     flowbooks: true,
     spreadsheets: false,
+    // QB is built for small businesses, not freelancers specifically
     quickbooks: false,
   },
   {
-    feature: "Smoothed income view",
+    feature: "Smoothed income (rolling avg)",
+    icon: Activity,
     flowbooks: true,
     spreadsheets: false,
+    // QB has no built-in rolling average income view
     quickbooks: false,
   },
   {
     feature: "Quarterly tax estimates",
+    icon: Shield,
     flowbooks: true,
-    spreadsheets: "Manual",
+    spreadsheets: "DIY formulas",
     quickbooks: true,
   },
   {
     feature: "Invoice creation",
+    icon: FileText,
     flowbooks: true,
-    spreadsheets: "Manual",
+    spreadsheets: "DIY templates",
     quickbooks: true,
   },
   {
-    feature: "Client & project CRM",
+    feature: "Client & project tracking",
+    icon: FolderKanban,
     flowbooks: true,
-    spreadsheets: "Manual",
+    spreadsheets: "DIY setup",
     quickbooks: true,
   },
   {
     feature: "Expense tracking",
+    icon: Receipt,
     flowbooks: true,
-    spreadsheets: "Manual",
+    spreadsheets: "DIY setup",
     quickbooks: true,
   },
   {
     feature: "Multi-currency support",
-    flowbooks: true,
-    spreadsheets: "Manual",
-    quickbooks: true,
+    icon: Globe,
+    flowbooks: "Manual rates",
+    spreadsheets: "DIY formulas",
+    // QB supports multi-currency on higher plans only
+    quickbooks: "Paid plans",
   },
   {
-    feature: "Setup time",
-    flowbooks: "< 5 min",
+    feature: "Time to set up",
+    icon: Clock,
+    flowbooks: "~5 min",
     spreadsheets: "Hours",
-    quickbooks: "Days",
+    quickbooks: "Hours",
   },
   {
     feature: "Learning curve",
-    flowbooks: "Minimal",
+    icon: GraduationCap,
+    flowbooks: "Low",
     spreadsheets: "Medium",
     quickbooks: "High",
   },
   {
     feature: "Price",
+    icon: BadgeDollarSign,
     flowbooks: "Free",
     spreadsheets: "Free",
-    quickbooks: "$30+/mo",
+    // QB Simple Start as of 2025
+    quickbooks: "$35+/mo",
   },
 ];
 
@@ -211,7 +238,7 @@ const faqs = [
   },
   {
     q: "Do you support currencies outside USD?",
-    a: "Yes  multi-currency is supported with manual exchange rates per transaction, so you can work with international clients.",
+    a: "Yes, multi currency is supported with manual exchange rates per transaction, so you can work with international clients.",
   },
   {
     q: "Can I export my data?",
@@ -221,12 +248,18 @@ const faqs = [
 
 function ComparisonCell({ value }: { value: CellValue }) {
   if (value === true)
-    return <Check className="w-5 h-5 text-primary mx-auto" strokeWidth={2.5} />;
+    return (
+      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/10">
+        <Check className="w-3.5 h-3.5 text-primary" strokeWidth={2.5} />
+      </span>
+    );
   if (value === false)
     return (
-      <X className="w-5 h-5 text-muted-foreground/40 mx-auto" strokeWidth={2} />
+      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-muted">
+        <X className="w-3.5 h-3.5 text-muted-foreground/50" strokeWidth={2} />
+      </span>
     );
-  return <span className="text-sm text-muted-foreground">{value}</span>;
+  return <span className="text-xs font-medium text-muted-foreground">{value}</span>;
 }
 
 export default function LandingPage() {
@@ -278,18 +311,9 @@ export default function LandingPage() {
                 Dashboard
               </Button>
             ) : (
-              <>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate("/login")}
-                >
-                  Sign in
-                </Button>
-                <Button size="sm" onClick={() => navigate("/signup")}>
-                  Get started
-                </Button>
-              </>
+              <Button size="sm" onClick={() => navigate("/signup")}>
+                Get started
+              </Button>
             )}
           </div>
         </div>
@@ -338,7 +362,7 @@ export default function LandingPage() {
               <motion.div variants={fadeUp} custom={0}>
                 <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium border border-primary/30 bg-primary/5 text-primary shadow-sm">
                   <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  Built for freelancers, not corporations
+                  Your money. Your rules.
                 </span>
               </motion.div>
 
@@ -352,7 +376,7 @@ export default function LandingPage() {
                 <span className="block mt-1">
                   <span className="relative inline-block bg-gradient-to-r from-primary via-emerald-400 to-teal-500 bg-clip-text text-transparent">
                     made simpler.
-                    {/* Wavy underline — inline so it matches text width */}
+                    {/* Wavy underline - inline so it matches text width */}
                     <motion.svg
                       initial={{ pathLength: 0, opacity: 0 }}
                       animate={{ pathLength: 1, opacity: 1 }}
@@ -420,12 +444,12 @@ export default function LandingPage() {
               <motion.div
                 variants={fadeUp}
                 custom={3}
-                className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start"
+                className="flex flex-row gap-3 justify-center lg:justify-start"
               >
                 {!loading && user ? (
                   <Button
                     size="lg"
-                    className="h-13 px-8 text-base rounded-xl shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-200"
+                    className="h-14 px-8 text-base rounded-xl shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-200"
                     onClick={() => navigate("/dashboard")}
                   >
                     Go to Dashboard <ArrowRight className="w-4 h-4 ml-2" />
@@ -434,18 +458,20 @@ export default function LandingPage() {
                   <>
                     <Button
                       size="lg"
-                      className="h-13 px-8 text-base rounded-xl shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-200"
+                      className="h-11 sm:h-14 px-5 sm:px-8 text-sm sm:text-base rounded-xl shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-200"
                       onClick={() => navigate("/signup")}
                     >
-                      Get started <ArrowRight className="w-4 h-4 ml-2" />
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Get started
                     </Button>
                     <Button
                       size="lg"
                       variant="outline"
-                      className="h-13 px-8 text-base rounded-xl border-2 hover:bg-muted hover:-translate-y-0.5 transition-all duration-200"
-                      onClick={() => navigate("/login")}
+                      className="h-11 sm:h-14 px-5 sm:px-8 text-sm sm:text-base rounded-xl border-2 hover:bg-muted hover:-translate-y-0.5 transition-all duration-200"
+                      onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
                     >
-                      Sign in
+                      See how it works
+                      <ChevronDown className="w-4 h-4 ml-2" />
                     </Button>
                   </>
                 )}
@@ -464,7 +490,7 @@ export default function LandingPage() {
                 duration: 0.7,
                 ease: [0.22, 1, 0.36, 1],
               }}
-              className="relative flex justify-center lg:justify-end"
+              className="relative flex justify-center lg:justify-end hidden md:flex"
             >
               {/* Glow behind card */}
               <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-teal-400/10 rounded-3xl blur-2xl scale-95 -z-10" />
@@ -630,6 +656,40 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Marquee strap */}
+      <div className="relative overflow-hidden border-y border-primary/20 bg-gradient-to-r from-primary/5 via-emerald-50/60 to-teal-50/40 dark:from-primary/10 dark:via-emerald-950/30 dark:to-teal-950/20 py-3.5">
+        {/* fade edges */}
+        <div className="pointer-events-none absolute left-0 top-0 h-full w-16 z-10 bg-gradient-to-r from-[hsl(var(--background))] to-transparent" />
+        <div className="pointer-events-none absolute right-0 top-0 h-full w-16 z-10 bg-gradient-to-l from-[hsl(var(--background))] to-transparent" />
+        <div className="flex w-max animate-marquee">
+          {[
+            { icon: BarChart3, text: "Track income, even when it's irregular" },
+            { icon: Receipt,   text: "Categorize expenses for tax season" },
+            { icon: FileText,  text: "Create and send invoices" },
+            { icon: Shield,    text: "Estimate quarterly taxes" },
+            { icon: Users,     text: "Keep clients and projects organized" },
+            { icon: Globe,     text: "Works with multiple currencies" },
+            { icon: Zap,       text: "No accountant needed to get started" },
+            { icon: TrendingUp,text: "See where your money actually goes" },
+            // duplicate for seamless loop
+            { icon: BarChart3, text: "Track income, even when it's irregular" },
+            { icon: Receipt,   text: "Categorize expenses for tax season" },
+            { icon: FileText,  text: "Create and send invoices" },
+            { icon: Shield,    text: "Estimate quarterly taxes" },
+            { icon: Users,     text: "Keep clients and projects organized" },
+            { icon: Globe,     text: "Works with multiple currencies" },
+            { icon: Zap,       text: "No accountant needed to get started" },
+            { icon: TrendingUp,text: "See where your money actually goes" },
+          ].map((item, i) => (
+            <span key={i} className="inline-flex items-center gap-2 px-6 text-sm font-medium text-muted-foreground whitespace-nowrap">
+              <item.icon className="w-3.5 h-3.5 text-primary flex-shrink-0" strokeWidth={2} />
+              {item.text}
+              <span className="ml-4 w-1 h-1 rounded-full bg-primary/40" />
+            </span>
+          ))}
+        </div>
+      </div>
+
       {/* Features */}
       <section id="features" className="py-20 md:py-28 bg-muted/30">
         <div className="max-w-6xl mx-auto px-6">
@@ -646,8 +706,7 @@ export default function LandingPage() {
               Built for freelancer workflows
             </h2>
             <p className="text-muted-foreground mt-3 max-w-md mx-auto">
-              Every feature designed around how freelancers actually work —
-              not adapted from enterprise software.
+              Every feature designed around how freelancers actually work not adapted from enterprise software.
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -758,83 +817,89 @@ export default function LandingPage() {
             </p>
           </div>
 
+          {/* Mobile: card layout */}
+          <div className="md:hidden space-y-3">
+            {/* Column header legend */}
+            <div className="grid grid-cols-3 gap-0 rounded-xl border border-border overflow-hidden">
+              {[
+                { label: "FlowBooks", icon: <FlowBooksLogo size={16} />, highlight: true },
+                { label: "Spreadsheets", icon: <Table2 className="w-4 h-4 text-muted-foreground" />, highlight: false },
+                { label: "QuickBooks", icon: <BookOpen className="w-4 h-4 text-muted-foreground" />, highlight: false },
+              ].map((col, i) => (
+                <div key={col.label}
+                  className={`flex flex-col items-center gap-1.5 py-3 px-2 border-r last:border-r-0 border-border ${
+                    col.highlight ? "bg-primary/5" : "bg-muted/40"
+                  }`}>
+                  {col.icon}
+                  <span className={`text-[11px] font-semibold ${
+                    col.highlight ? "text-primary" : "text-muted-foreground"
+                  }`}>{col.label}</span>
+                </div>
+              ))}
+            </div>
+
+            {comparisonRows.map((row, i) => (
+              <motion.div
+                key={row.feature}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.03, duration: 0.35 }}
+                className="rounded-xl border border-border bg-background shadow-sm overflow-hidden"
+              >
+                <div className="px-4 py-2.5 bg-muted/30 border-b border-border flex items-center gap-2">
+                  <row.icon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" strokeWidth={1.8} />
+                  <p className="text-sm font-medium">{row.feature}</p>
+                </div>
+                <div className="grid grid-cols-3 divide-x divide-border">
+                  {([
+                    { value: row.flowbooks, highlight: true },
+                    { value: row.spreadsheets, highlight: false },
+                    { value: row.quickbooks, highlight: false },
+                  ] as { value: CellValue; highlight: boolean }[]).map((col, ci) => (
+                    <div key={ci}
+                      className={`flex items-center justify-center py-3 px-2 ${
+                        col.highlight ? "bg-primary/[0.03]" : ""
+                      }`}>
+                      <ComparisonCell value={col.value} />
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Desktop: table layout */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="overflow-x-auto rounded-2xl border border-border shadow-sm"
+            className="hidden md:block overflow-x-auto rounded-2xl border border-border shadow-sm"
           >
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/60">
-                  <th className="text-left px-5 py-4 font-serif font-semibold text-base w-[40%]">
-                    Feature
-                  </th>
+                  <th className="text-left px-5 py-4 font-serif font-semibold text-base w-[40%]">Feature</th>
                   <th className="px-4 py-4 text-center font-serif font-semibold text-primary bg-primary/5">
-                    <div className="flex flex-col items-center gap-1">
+                    <div className="flex flex-col items-center gap-1.5">
                       <FlowBooksLogo size={20} />
                       FlowBooks
                     </div>
                   </th>
                   <th className="px-4 py-4 text-center font-medium text-muted-foreground">
-                    <div className="flex flex-col items-center gap-1">
-                      <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 48 48"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M28 4H10C7.8 4 6 5.8 6 8v32c0 2.2 1.8 4 4 4h28c2.2 0 4-1.8 4-4V20L28 4z"
-                          fill="#23A566"
-                        />
-                        <path d="M28 4v16h16L28 4z" fill="#1C8C54" />
-                        <rect
-                          x="14"
-                          y="24"
-                          width="20"
-                          height="2.5"
-                          rx="1"
-                          fill="white"
-                        />
-                        <rect
-                          x="14"
-                          y="29"
-                          width="20"
-                          height="2.5"
-                          rx="1"
-                          fill="white"
-                        />
-                        <rect
-                          x="14"
-                          y="34"
-                          width="12"
-                          height="2.5"
-                          rx="1"
-                          fill="white"
-                        />
-                      </svg>
+                    <div className="flex flex-col items-center gap-1.5">
+                      <span className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                        <Table2 className="w-4 h-4 text-muted-foreground" />
+                      </span>
                       Spreadsheets
                     </div>
                   </th>
                   <th className="px-4 py-4 text-center font-medium text-muted-foreground">
-                    <div className="flex flex-col items-center gap-1">
-                      <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 48 48"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <circle cx="24" cy="24" r="22" fill="#2CA01C" />
-                        <path
-                          d="M14 24c0-5.52 4.48-10 10-10s10 4.48 10 10-4.48 10-10 10H12v-4h2.34A9.96 9.96 0 0 1 14 24z"
-                          fill="white"
-                        />
-                        <circle cx="24" cy="24" r="4" fill="#2CA01C" />
-                      </svg>
+                    <div className="flex flex-col items-center gap-1.5">
+                      <span className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                        <BookOpen className="w-4 h-4 text-muted-foreground" />
+                      </span>
                       QuickBooks
                     </div>
                   </th>
@@ -842,22 +907,19 @@ export default function LandingPage() {
               </thead>
               <tbody>
                 {comparisonRows.map((row, i) => (
-                  <tr
-                    key={row.feature}
-                    className={`border-b border-border last:border-0 ${i % 2 === 0 ? "bg-background" : "bg-muted/20"}`}
-                  >
-                    <td className="px-5 py-3.5 text-sm font-medium">
-                      {row.feature}
+                  <tr key={row.feature}
+                    className={`border-b border-border last:border-0 ${
+                      i % 2 === 0 ? "bg-background" : "bg-muted/20"
+                    }`}>
+                    <td className="px-5 py-3.5">
+                      <span className="flex items-center gap-2">
+                        <row.icon className="w-4 h-4 text-muted-foreground flex-shrink-0" strokeWidth={1.8} />
+                        <span className="text-sm font-medium">{row.feature}</span>
+                      </span>
                     </td>
-                    <td className="px-4 py-3.5 text-center bg-primary/[0.03]">
-                      <ComparisonCell value={row.flowbooks} />
-                    </td>
-                    <td className="px-4 py-3.5 text-center">
-                      <ComparisonCell value={row.spreadsheets} />
-                    </td>
-                    <td className="px-4 py-3.5 text-center">
-                      <ComparisonCell value={row.quickbooks} />
-                    </td>
+                    <td className="px-4 py-3.5 text-center bg-primary/[0.03]"><ComparisonCell value={row.flowbooks} /></td>
+                    <td className="px-4 py-3.5 text-center"><ComparisonCell value={row.spreadsheets} /></td>
+                    <td className="px-4 py-3.5 text-center"><ComparisonCell value={row.quickbooks} /></td>
                   </tr>
                 ))}
               </tbody>
@@ -865,8 +927,7 @@ export default function LandingPage() {
           </motion.div>
 
           <p className="text-xs text-muted-foreground text-center mt-4">
-            QuickBooks pricing based on publicly listed Simple Start plan as of
-            2025.
+            QuickBooks pricing based on publicly listed Simple Start plan as of 2025. Multi-currency requires Advanced plan.
           </p>
         </div>
       </section>
@@ -893,7 +954,7 @@ export default function LandingPage() {
           </div>
 
           <p className="text-xs text-center text-muted-foreground mb-6">
-            Sample data below — your dashboard reflects your own records.
+            Sample data below - your dashboard reflects your own records.
           </p>
 
           {/* Stat pills */}
@@ -1174,57 +1235,37 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-border bg-muted/20">
-        <div className="max-w-6xl mx-auto px-6 pt-14 pb-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 mb-12">
-            {/* Brand */}
+        <div className="max-w-6xl mx-auto px-6 pt-12 pb-8">
+
+          {/* Top grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+            {/* Brand — full width on mobile */}
             <div className="col-span-2 md:col-span-1 space-y-4">
               <div className="flex items-center gap-2">
-                <FlowBooksLogo size={30} />
-                <span className="font-serif font-semibold text-lg">
-                  FlowBooks
-                </span>
+                <FlowBooksLogo size={28} />
+                <span className="font-serif font-semibold text-lg">FlowBooks</span>
               </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Financial clarity for freelancers. Track income, estimate taxes,
-                and invoice clients — all in one place.
+              <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
+                Financial clarity for freelancers. Track income, estimate taxes, and invoice clients.
               </p>
-              <div className="flex items-center gap-3 pt-1">
-                <a
-                  href="https://github.com/MuhammadTanveerAbbas/flowbooks"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="GitHub"
-                  className="w-8 h-8 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
-                >
-                  <Github className="w-4 h-4" />
-                </a>
-                <a
-                  href="https://x.com/themvpguy"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Twitter / X"
-                  className="w-8 h-8 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
-                >
-                  <Twitter className="w-4 h-4" />
-                </a>
-                <a
-                  href="https://themvpguy.vercel.app"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Portfolio"
-                  className="w-8 h-8 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                </a>
+              <div className="flex items-center gap-2 pt-1">
+                {[
+                  { href: "https://github.com/MuhammadTanveerAbbas/flowbooks", icon: Github, label: "GitHub" },
+                  { href: "https://x.com/m_tanveerabbas", icon: Twitter, label: "X" },
+                  { href: "https://themvpguy.vercel.app", icon: ExternalLink, label: "Portfolio" },
+                ].map(({ href, icon: Icon, label }) => (
+                  <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label}
+                    className="w-8 h-8 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors">
+                    <Icon className="w-4 h-4" />
+                  </a>
+                ))}
               </div>
             </div>
 
-            {/* App links */}
+            {/* App */}
             <div className="space-y-3">
-              <h4 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                App
-              </h4>
-              <ul className="space-y-2.5">
+              <h4 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">App</h4>
+              <ul className="space-y-2">
                 {[
                   { label: "Dashboard", href: "/dashboard" },
                   { label: "Income", href: "/income" },
@@ -1233,10 +1274,8 @@ export default function LandingPage() {
                   { label: "Tax", href: "/tax" },
                 ].map(({ label, href }) => (
                   <li key={label}>
-                    <button
-                      onClick={() => navigate(href)}
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                    >
+                    <button onClick={() => navigate(href)}
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                       {label}
                     </button>
                   </li>
@@ -1244,12 +1283,10 @@ export default function LandingPage() {
               </ul>
             </div>
 
-            {/* Manage links */}
+            {/* Manage */}
             <div className="space-y-3">
-              <h4 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                Manage
-              </h4>
-              <ul className="space-y-2.5">
+              <h4 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Manage</h4>
+              <ul className="space-y-2">
                 {[
                   { label: "Clients", href: "/clients" },
                   { label: "Projects", href: "/projects" },
@@ -1258,10 +1295,8 @@ export default function LandingPage() {
                   { label: "Sign in", href: "/login" },
                 ].map(({ label, href }) => (
                   <li key={label}>
-                    <button
-                      onClick={() => navigate(href)}
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                    >
+                    <button onClick={() => navigate(href)}
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                       {label}
                     </button>
                   </li>
@@ -1271,76 +1306,31 @@ export default function LandingPage() {
 
             {/* Legal */}
             <div className="space-y-3">
-              <h4 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                Legal
-              </h4>
-              <ul className="space-y-2.5">
+              <h4 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Legal</h4>
+              <ul className="space-y-2">
                 {[
                   { label: "Privacy Policy", href: "/privacy" },
                   { label: "Terms of Service", href: "/terms" },
                   { label: "Refund Policy", href: "/refund" },
                 ].map(({ label, href }) => (
                   <li key={label}>
-                    <button
-                      onClick={() => navigate(href)}
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                    >
+                    <button onClick={() => navigate(href)}
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                       {label}
                     </button>
                   </li>
                 ))}
               </ul>
             </div>
-
-            {/* Built by */}
-            <div className="space-y-3">
-              <h4 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                Built by
-              </h4>
-              <ul className="space-y-2.5">
-                {[
-                  { label: "Portfolio", href: "https://themvpguy.vercel.app" },
-                  {
-                    label: "GitHub",
-                    href: "https://github.com/MuhammadTanveerAbbas",
-                  },
-                  { label: "Twitter / X", href: "https://x.com/themvpguy" },
-                  {
-                    label: "LinkedIn",
-                    href: "https://linkedin.com/in/muhammadtanveerabbas",
-                  },
-                  {
-                    label: "Source code",
-                    href: "https://github.com/MuhammadTanveerAbbas/flowbooks",
-                  },
-                ].map(({ label, href }) => (
-                  <li key={label}>
-                    <a
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
           </div>
 
-          <div className="border-t border-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p className="text-xs text-muted-foreground">
-              © {new Date().getFullYear()} FlowBooks. MIT License.
-            </p>
+          {/* Bottom bar */}
+          <div className="border-t border-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} FlowBooks. MIT License.</p>
             <p className="text-xs text-muted-foreground">
               Made with ♥ by{" "}
-              <a
-                href="https://themvpguy.vercel.app"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-foreground transition-colors underline underline-offset-2"
-              >
+              <a href="https://themvpguy.vercel.app" target="_blank" rel="noopener noreferrer"
+                className="hover:text-foreground transition-colors underline underline-offset-2">
                 Muhammad Tanveer Abbas
               </a>
             </p>
