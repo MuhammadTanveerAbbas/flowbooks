@@ -1,5 +1,10 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { createServerSupabaseClient, requireBearer, sendJson } from "./_shared.js";
+import {
+  checkSupabaseHealth,
+  requireBearer,
+  sendJson,
+  SupabaseConfigurationError,
+} from "./_shared.js";
 
 export default async function handler(
   request: IncomingMessage,
@@ -16,27 +21,27 @@ export default async function handler(
   }
 
   try {
-    const supabase = createServerSupabaseClient();
-    const { error } = await supabase.from("profiles").select("id").limit(1);
-
-    if (error) {
-      sendJson(response, 503, {
+    await checkSupabaseHealth();
+  } catch (error) {
+    if (error instanceof SupabaseConfigurationError) {
+      sendJson(response, 500, {
         status: "error",
-        dependency: "supabase",
         timestamp: new Date().toISOString(),
       });
       return;
     }
 
-    sendJson(response, 200, {
-      status: "ok",
-      timestamp: new Date().toISOString(),
-      version: process.env.npm_package_version ?? "unknown",
-    });
-  } catch {
-    sendJson(response, 500, {
+    sendJson(response, 503, {
       status: "error",
+      dependency: "supabase",
       timestamp: new Date().toISOString(),
     });
+    return;
   }
+
+  sendJson(response, 200, {
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    version: process.env.npm_package_version ?? "unknown",
+  });
 }

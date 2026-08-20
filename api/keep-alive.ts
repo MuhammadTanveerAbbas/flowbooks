@@ -1,8 +1,9 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import {
-  createServerSupabaseClient,
+  checkSupabaseHealth,
   requireBearer,
   sendJson,
+  SupabaseConfigurationError,
 } from "./_shared.js";
 
 export default async function handler(
@@ -20,16 +21,16 @@ export default async function handler(
   }
 
   try {
-    const supabase = createServerSupabaseClient();
-    const { error } = await supabase.from("profiles").select("id").limit(1);
-
-    if (error) {
-      sendJson(response, 503, { status: "error" });
+    await checkSupabaseHealth();
+  } catch (error) {
+    if (error instanceof SupabaseConfigurationError) {
+      sendJson(response, 500, { status: "error" });
       return;
     }
 
-    sendJson(response, 200, { status: "ok" });
-  } catch {
-    sendJson(response, 500, { status: "error" });
+    sendJson(response, 503, { status: "error" });
+    return;
   }
+
+  sendJson(response, 200, { status: "ok" });
 }

@@ -1,4 +1,4 @@
-﻿import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import {
@@ -23,7 +23,6 @@ import {
   BookOpen,
   UserCheck,
   FolderKanban,
-  Wallet,
   Clock,
   GraduationCap,
   BadgeDollarSign,
@@ -825,7 +824,7 @@ export default function LandingPage() {
                 { label: "FlowBooks", icon: <FlowBooksLogo size={16} />, highlight: true },
                 { label: "Spreadsheets", icon: <Table2 className="w-4 h-4 text-muted-foreground" />, highlight: false },
                 { label: "QuickBooks", icon: <BookOpen className="w-4 h-4 text-muted-foreground" />, highlight: false },
-              ].map((col, i) => (
+              ].map((col) => (
                 <div key={col.label}
                   className={`flex flex-col items-center gap-1.5 py-3 px-2 border-r last:border-r-0 border-border ${
                     col.highlight ? "bg-primary/5" : "bg-muted/40"
