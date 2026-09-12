@@ -23,17 +23,31 @@ import AuthCallback from "@/pages/AuthCallback";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfService from "@/pages/TermsOfService";
 import RefundPolicy from "@/pages/RefundPolicy";
+import Dashboard from "@/pages/Dashboard";
+import Onboarding from "@/pages/Onboarding";
+import ProjectsPage from "@/pages/ProjectsPage";
+import TaxPage from "@/pages/TaxPage";
+import InvoicesPage from "@/pages/InvoicesPage";
 import { lazy, Suspense, useEffect } from "react";
 import { PageLoader } from "@/components/PageLoader";
 
+// Only the heavy landing page stays lazy — it's ~40KB and never needed by logged-in users
 const LandingPage = lazy(() => import("@/pages/LandingPage"));
-const Dashboard = lazy(() => import("@/pages/Dashboard"));
-const Onboarding = lazy(() => import("@/pages/Onboarding"));
-const ProjectsPage = lazy(() => import("@/pages/ProjectsPage"));
-const TaxPage = lazy(() => import("@/pages/TaxPage"));
-const InvoicesPage = lazy(() => import("@/pages/InvoicesPage"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Cache data for 5 minutes — prevents re-fetch spinners on every navigation
+      staleTime: 5 * 60 * 1000,
+      // Keep unused cache for 10 minutes
+      gcTime: 10 * 60 * 1000,
+      // Don't re-fetch on every window focus
+      refetchOnWindowFocus: false,
+      // Retry once on failure instead of 3 times
+      retry: 1,
+    },
+  },
+});
 
 // Catches ?code= landing on any page (Supabase ignoring redirectTo) and
 // forwards to the real callback handler, preserving the query string.
@@ -74,9 +88,7 @@ const App = () => (
                 path="/onboarding"
                 element={
                   <ProtectedRoute>
-                    <Suspense fallback={<PageLoader />}>
-                      <Onboarding />
-                    </Suspense>
+                    <Onboarding />
                   </ProtectedRoute>
                 }
               />
@@ -88,13 +100,13 @@ const App = () => (
                   </ProtectedRoute>
                 }
               >
-                <Route path="/dashboard" element={<Suspense fallback={<PageLoader />}><Dashboard /></Suspense>} />
+                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/income" element={<IncomePage />} />
                 <Route path="/expenses" element={<ExpensesPage />} />
                 <Route path="/clients" element={<ClientsPage />} />
-                <Route path="/projects" element={<Suspense fallback={<PageLoader />}><ProjectsPage /></Suspense>} />
-                <Route path="/tax" element={<Suspense fallback={<PageLoader />}><TaxPage /></Suspense>} />
-                <Route path="/invoices" element={<Suspense fallback={<PageLoader />}><InvoicesPage /></Suspense>} />
+                <Route path="/projects" element={<ProjectsPage />} />
+                <Route path="/tax" element={<TaxPage />} />
+                <Route path="/invoices" element={<InvoicesPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
               </Route>
 

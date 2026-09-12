@@ -17,7 +17,6 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/login" replace />;
   }
 
-  // If user is on onboarding page but has already completed it, redirect to dashboard
   if (location.pathname === "/onboarding" && onboardingComplete === true) {
     return <Navigate to="/dashboard" replace />;
   }

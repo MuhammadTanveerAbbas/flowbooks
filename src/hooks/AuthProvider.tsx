@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, useRef, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthContext } from "@/hooks/auth-context";
@@ -6,9 +6,10 @@ import { AuthContext } from "@/hooks/auth-context";
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [onboardingComplete, setOnboardingComplete] = useState<boolean | null>(
-    null,
-  );
+  const [onboardingComplete, setOnboardingComplete] = useState<boolean | null>(null);
+  const mountedRef = useRef(true);
+  // Prevent handling the same auth event twice (React StrictMode double-invoke)
+  const initializedRef = useRef(false);
 
   const fetchProfile = async (userId: string): Promise<boolean> => {
     try {
@@ -19,97 +20,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .maybeSingle();
 
       if (error) {
-        if (import.meta.env.DEV) {
-          console.error("Error fetching profile:", error);
-        }
-        setOnboardingComplete(false);
+        if (import.meta.env.DEV) console.error("Error fetching profile:", error);
+        if (mountedRef.current) setOnboardingComplete(false);
         return false;
       }
 
       const complete = data?.onboarding_complete ?? false;
-      setOnboardingComplete(complete);
+      if (mountedRef.current) setOnboardingComplete(complete);
       return complete;
     } catch (err) {
-      if (import.meta.env.DEV) {
-        console.error("fetchProfile exception:", err);
-      }
-      setOnboardingComplete(false);
+      if (import.meta.env.DEV) console.error("fetchProfile exception:", err);
+      if (mountedRef.current) setOnboardingComplete(false);
       return false;
     }
   };
 
   useEffect(() => {
-    let mounted = true;
-    let initializing = true;
-
-    const initAuth = async () => {
-      try {
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession();
-
-        if (!mounted) return;
-
-        if (error) {
-          if (import.meta.env.DEV) {
-            console.error("[Auth] Session fetch error:", error);
-          }
-          setSession(null);
-          setOnboardingComplete(null);
-          setLoading(false);
-          initializing = false;
-          return;
-        }
-
-        if (session?.user) {
-          const {
-            data: { user },
-            error: userError,
-          } = await supabase.auth.getUser();
-
-          if (userError || !user) {
-            setSession(null);
-            setOnboardingComplete(null);
-          } else {
-            setSession(session);
-            await fetchProfile(user.id);
-          }
-        } else {
-          setSession(null);
-          setOnboardingComplete(null);
-        }
-        setLoading(false);
-        initializing = false;
-      } catch (err) {
-        if (!mounted) return;
-        if (import.meta.env.DEV) {
-          console.error("[Auth] Session error:", err);
-        }
-        setSession(null);
-        setOnboardingComplete(null);
-        setLoading(false);
-        initializing = false;
-      }
-    };
+    mountedRef.current = true;
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (!mounted || initializing) return;
-      setSession(session ?? null);
-      if (session?.user) {
-        await fetchProfile(session.user.id);
+    } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+      if (!mountedRef.current) return;
+
+      if (newSession?.user) {
+        // Use the session from the event directly — it is already validated
+        // by the Supabase client. Do NOT call getUser() here; doing so
+        // triggers a new network request that fires another auth state change,
+        // creating an infinite loop that keeps loading = true forever.
+        setSession(newSession);
+        await fetchProfile(newSession.user.id);
       } else {
+        setSession(null);
         setOnboardingComplete(null);
-        setLoading(false);
       }
+
+      if (mountedRef.current) setLoading(false);
     });
 
-    initAuth();
-
     return () => {
-      mounted = false;
+      mountedRef.current = false;
+      initializedRef.current = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -126,9 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error && import.meta.env.DEV) {
       console.error("[Auth] Sign out error:", error);
     }
-    setSession(null);
-    setOnboardingComplete(null);
-    setLoading(false);
+    // onAuthStateChange fires SIGNED_OUT automatically, which clears state above
   };
 
   return (

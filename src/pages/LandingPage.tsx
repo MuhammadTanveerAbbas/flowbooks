@@ -275,44 +275,50 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Nav */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="max-w-6xl mx-auto flex items-center justify-between px-4 sm:px-6 py-3">
-          <div className="flex items-center gap-2">
-            <FlowBooksLogo size={32} />
-            <span className="font-serif font-semibold text-lg">FlowBooks</span>
+      <header className="sticky top-0 z-50 bg-[#f0faf4] dark:bg-[#0a1a0f] border-b border-border/60">
+        <div className="w-full flex items-center justify-between px-6 sm:px-8 h-16">
+          {/* Logo — left */}
+          <div className="flex items-center gap-2.5 flex-1">
+            <FlowBooksLogo size={30} />
+            <span className="font-serif font-semibold text-lg tracking-tight">FlowBooks</span>
           </div>
-          <nav className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
-            <a
-              href="#features"
-              className="hover:text-foreground transition-colors"
-            >
-              Features
-            </a>
-            <a
-              href="#how-it-works"
-              className="hover:text-foreground transition-colors"
-            >
-              How it works
-            </a>
-            <a
-              href="#compare"
-              className="hover:text-foreground transition-colors"
-            >
-              Compare
-            </a>
-            <a href="#faq" className="hover:text-foreground transition-colors">
-              FAQ
-            </a>
+
+          {/* Nav links — center */}
+          <nav className="hidden md:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
+            {[
+              { href: "#features", label: "Features" },
+              { href: "#how-it-works", label: "How it works" },
+              { href: "#compare", label: "Compare" },
+              { href: "#faq", label: "FAQ" },
+            ].map(({ href, label }) => (
+              <a
+                key={href}
+                href={href}
+                className="px-3.5 py-1.5 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+              >
+                {label}
+              </a>
+            ))}
           </nav>
-          <div className="flex items-center gap-3">
+
+          {/* CTA — right */}
+          <div className="flex items-center gap-3 flex-1 justify-end">
             {!loading && user ? (
               <Button size="sm" onClick={() => navigate("/dashboard")}>
-                Dashboard
+                Dashboard <ArrowRight className="w-3.5 h-3.5 ml-1" />
               </Button>
             ) : (
-              <Button size="sm" onClick={() => navigate("/signup")}>
-                Get started
-              </Button>
+              <>
+                <button
+                  onClick={() => navigate("/login")}
+                  className="hidden sm:block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Log in
+                </button>
+                <Button size="sm" onClick={() => navigate("/signup")}>
+                  Get started <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                </Button>
+              </>
             )}
           </div>
         </div>
