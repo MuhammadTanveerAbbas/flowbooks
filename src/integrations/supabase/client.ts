@@ -26,7 +26,9 @@ export const supabase = createClient<Database>(
       autoRefreshToken: true,
       detectSessionInUrl: true,
       flowType: 'pkce',
-      debug: import.meta.env.DEV,
+      // Verbose auth logs help while developing, but would flood the test
+      // runner output, so keep them out of the vitest environment.
+      debug: import.meta.env.DEV && import.meta.env.MODE !== 'test',
     },
     global: {
       headers: {

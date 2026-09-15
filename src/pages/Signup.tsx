@@ -26,7 +26,7 @@ export default function Signup() {
 
   const handleSignup = async (data: SignupForm) => {
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data: signUpData, error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
@@ -35,12 +35,29 @@ export default function Signup() {
       },
     });
     setLoading(false);
+
     if (error) {
       toast.error(error.message);
-    } else {
-      toast.success("Check your email for a confirmation link!");
-      navigate("/login");
+      return;
     }
+
+    // Supabase returns an obfuscated "user" with no identities when the email is
+    // already registered, so surface it instead of pretending signup worked.
+    if (signUpData.user && signUpData.user.identities?.length === 0) {
+      toast.error("An account with this email already exists. Please sign in instead.");
+      navigate("/login");
+      return;
+    }
+
+    // When email confirmation is disabled the session comes back immediately.
+    if (signUpData.session) {
+      toast.success("Welcome to FlowBooks!");
+      navigate("/dashboard", { replace: true });
+      return;
+    }
+
+    toast.success("Check your email for a confirmation link!");
+    navigate("/login");
   };
 
   const handleGoogleSignup = async () => {

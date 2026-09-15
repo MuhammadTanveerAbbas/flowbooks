@@ -2,8 +2,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/auth-context";
 import { toast } from "sonner";
 import { FlowBooksLogo } from "@/components/FlowBooksLogo";
 import { useForm } from "react-hook-form";
@@ -16,6 +17,9 @@ type LoginForm = z.infer<typeof loginSchema>;
 export default function Login() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null);
+  const [resending, setResending] = useState(false);
+  const { session, loading: authLoading } = useAuth();
   const {
     register,
     handleSubmit,
@@ -24,6 +28,13 @@ export default function Login() {
     resolver: zodResolver(loginSchema),
   });
 
+  // A signed-in user should never be stuck on the login screen.
+  useEffect(() => {
+    if (!authLoading && session) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [authLoading, session, navigate]);
+
   const handleLogin = async (data: LoginForm) => {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({
@@ -31,10 +42,37 @@ export default function Login() {
       password: data.password,
     });
     setLoading(false);
+
+    if (error) {
+      // Email confirmation is required on this project (mailer_autoconfirm is
+      // off), so an unconfirmed account otherwise looks like a broken login.
+      if (/email not confirmed/i.test(error.message)) {
+        setUnconfirmedEmail(data.email);
+        toast.error("Please confirm your email address before signing in.");
+      } else {
+        setUnconfirmedEmail(null);
+        toast.error(error.message);
+      }
+      return;
+    }
+
+    setUnconfirmedEmail(null);
+    navigate("/dashboard");
+  };
+
+  const handleResendConfirmation = async () => {
+    if (!unconfirmedEmail) return;
+    setResending(true);
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: unconfirmedEmail,
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+    });
+    setResending(false);
     if (error) {
       toast.error(error.message);
     } else {
-      navigate("/dashboard");
+      toast.success("Confirmation email sent  check your inbox.");
     }
   };
 
@@ -117,6 +155,24 @@ export default function Login() {
             {loading ? "Signing in\u2026" : "Sign in"}
           </Button>
         </form>
+
+        {unconfirmedEmail && (
+          <div className="rounded-md border border-warning/40 bg-warning/10 p-3 text-sm space-y-2">
+            <p className="text-foreground">
+              <span className="font-medium">{unconfirmedEmail}</span> is not
+              confirmed yet. Check your inbox (and spam) for the confirmation link.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={handleResendConfirmation}
+              disabled={resending}
+            >
+              {resending ? "Sending…" : "Resend confirmation email"}
+            </Button>
+          </div>
+        )}
 
         <p className="text-center text-sm text-muted-foreground">
           Don't have an account?{" "}

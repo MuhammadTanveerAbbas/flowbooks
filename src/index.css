@@ -1,4 +1,10 @@
-@import url("https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap");
+/*
+ * Fonts are loaded from index.html via <link rel="stylesheet"> (with
+ * preconnect) instead of a CSS @import. A remote @import is subject to the
+ * `style-src` CSP directive and is render-blocking, which caused the
+ * "Loading the stylesheet ... violates the following Content Security Policy
+ * directive: style-src" error and blocked the fonts.
+ */
 
 @tailwind base;
 @tailwind components;
